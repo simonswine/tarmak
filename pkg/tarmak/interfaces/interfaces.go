@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/Sirupsen/logrus"
+	vault "github.com/hashicorp/vault/api"
 	"github.com/jetstack-experimental/vault-unsealer/pkg/kv"
 )
 
@@ -39,6 +40,7 @@ type Environment interface {
 	StateStack() Stack
 	VaultStack() Stack
 	VaultRootToken() (string, error)
+	VaultTunnel() (VaultTunnel, error)
 }
 
 type Provider interface {
@@ -106,6 +108,11 @@ type Tunnel interface {
 	Port() int
 }
 
+type VaultTunnel interface {
+	Tunnel
+	VaultClient() *vault.Client
+}
+
 type Host interface {
 	ID() string
 	Hostname() string
@@ -116,4 +123,7 @@ type Host interface {
 
 type Puppet interface {
 	TarGz(io.Writer) error
+}
+
+type Kubectl interface {
 }

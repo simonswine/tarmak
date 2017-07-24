@@ -131,6 +131,15 @@ func (i *Init) Run() error {
 			Default:  "jetstack/aws/jetstack-dev/sts/admin",
 		})
 	}
+	if err := t.Validate(); err != nil {
+		t.log.Fatal("could not validate config: ", err)
+	}
+
+	regions, err := ec2client.DescribeRegions(&ec2.DescribeRegionsInput{})
+
+	if err != nil {
+		panic(err)
+	}
 
 	query = "Which region should be used?"
 	awsRegion, err := ui.Ask(query, &input.Options{

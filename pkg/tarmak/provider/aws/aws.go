@@ -40,6 +40,7 @@ type EC2 interface {
 	ImportKeyPair(input *ec2.ImportKeyPairInput) (*ec2.ImportKeyPairOutput, error)
 	DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 	DescribeAvailabilityZones(input *ec2.DescribeAvailabilityZonesInput) (*ec2.DescribeAvailabilityZonesOutput, error)
+	DescribeRegions(input *ec2.DescribeRegionsInput) (*ec2.DescribeRegionsOutput, error)
 }
 
 var _ interfaces.Provider = &AWS{}
@@ -185,6 +186,25 @@ func (a *AWS) Validate() error {
 	}
 
 	return nil
+
+}
+
+func (a *AWS) Regions() ([]string, error) {
+	svc, err := a.EC2()
+	if err != nil {
+		return fmt.Errorf("error getting AWS EC2 session: %s", err)
+	}
+
+	regionsOutput, err := svc.DescribeRegions(&ec2.DescribeRegionsInput{})
+	if err != nil {
+		return fmt.Errorf("error getting AWS regions: %s", err)
+	}
+
+	var regions []string
+
+	for _, region := range regionsOutput.Regions {
+		regions = append(regions, *region.RegionName)
+	}
 
 }
 

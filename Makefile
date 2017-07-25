@@ -19,7 +19,7 @@ all: verify build
 
 build: generate go_build
 
-generate: .generate_files
+generate: go_generate
 
 go_verify: go_fmt go_vet go_test
 
@@ -60,5 +60,5 @@ bin/go-bindata:
 
 depend: bin/go-bindata bin/mockgen
 
-go generate: depend
+go_generate: depend
 	go generate $$(go list ./pkg/... ./cmd/...)

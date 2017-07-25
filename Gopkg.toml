@@ -37,6 +37,9 @@ required = ["github.com/golang/mock/mockgen", "github.com/jteeuwen/go-bindata/go
   branch = "master"
   name = "k8s.io/client-go"
 
+[[constraint]]
+  name = "github.com/jteeuwen/go-bindata"
+  revision = "a0ff2567cfb70903282db057e799fd826784d41d"
 
 # TODO: Update once changes are released
 [[constraint]]

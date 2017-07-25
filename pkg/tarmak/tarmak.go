@@ -334,5 +334,9 @@ func (t *Tarmak) Must(err error) {
 }
 
 func (t *Tarmak) CmdKubectl(args []string) error {
+	if err := t.Validate(); err != nil {
+		t.log.Fatal("could not validate config: ", err)
+	}
+
 	return t.kubectl.EnsureConfig()
 }

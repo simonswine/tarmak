@@ -52,11 +52,11 @@ go_codegen:
 
 bin/mockgen:
 	mkdir -p $(BINDIR)
-	go build -o $(BINDIR)/mockgen github.com/golang/mock/mockgen
+	go build -o $(BINDIR)/mockgen ./vendor/github.com/golang/mock/mockgen
 
 bin/go-bindata:
 	mkdir -p $(BINDIR)
-	go build -o $(BINDIR)/go-bindata github.com/jteeuwen/go-bindata/go-bindata
+	go build -o $(BINDIR)/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata
 
 depend: bin/go-bindata bin/mockgen
 

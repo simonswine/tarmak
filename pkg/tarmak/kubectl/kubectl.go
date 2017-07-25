@@ -9,9 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/Sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 
@@ -43,6 +45,10 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	path := fmt.Sprintf("%s/pki/k8s/sign/admin", k.tarmak.Context().ContextName())
 
 	k.log.Infof("request new certificate from vault (%s)", path)
+
+	if err := k.tarmak.Context().Environment().Validate(); err != nil {
+		k.log.Fatal("could not validate config: ", err)
+	}
 
 	// read vault root token
 	vaultRootToken, err := k.tarmak.Context().Environment().VaultRootToken()
@@ -128,7 +134,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) EnsureConfig() error {
+func (k *Kubectl) ensureConfig() error {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
@@ -144,8 +150,6 @@ func (k *Kubectl) EnsureConfig() error {
 		c = conf
 	}
 
-	newTunnel := false
-
 	c.CurrentContext = key
 
 	ctx, ok := c.Contexts[key]
@@ -159,7 +163,6 @@ func (k *Kubectl) EnsureConfig() error {
 
 	cluster, ok := c.Clusters[key]
 	if !ok {
-		newTunnel = true
 		cluster = api.NewCluster()
 		cluster.CertificateAuthorityData = []byte{}
 		cluster.Server = ""
@@ -181,20 +184,96 @@ func (k *Kubectl) EnsureConfig() error {
 		}
 	}
 
-	if !newTunnel {
-		// test connectivity without setting up tunnel
+	retries := 5
+	firstRun := true
+	var tunnel interfaces.Tunnel
+	defer func() {
+		if tunnel != nil {
+			tunnel.Stop()
+		}
+	}()
+
+	for {
+
+		if !firstRun || cluster.Server == "" {
+			if tunnel != nil {
+				tunnel.Stop()
+			}
+			tunnel = k.tarmak.Context().APITunnel()
+			err := tunnel.Start()
+			if err != nil {
+				return err
+			}
+			cluster.Server = fmt.Sprintf("https://localhost:%d", tunnel.Port())
+		}
+
+		version, err := k.verifyAPIVersion(*c)
+		if err != nil {
+			k.log.Debugf("error connecting to cluster: %s", err)
+		} else {
+			k.log.Debugf("connected to kubernetes api %s", version)
+			break
+		}
+
+		retries -= 1
+		firstRun = false
+		if retries == 0 {
+			return errors.New("unable to connect to kubernetes after 5 tries")
+		}
 	}
 
-	// setup kube api tunnel
+	if err := utils.EnsureDirectory(filepath.Dir(configPath), 0700); err != nil {
+		return err
+	}
+
+	if err := clientcmd.WriteToFile(*c, configPath); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
+	clientConfig := clientcmd.NewDefaultClientConfig(c, &clientcmd.ConfigOverrides{})
+	restConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return "", err
+	}
 
 	// test connectivity
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return "", err
+	}
 
-	err := utils.EnsureDirectory(filepath.Dir(configPath), 0700)
+	versionInfo, err := clientset.Discovery().ServerVersion()
+	if err != nil {
+		return "", err
+	}
+
+	return versionInfo.String(), nil
+}
+
+func (k *Kubectl) Kubectl(args []string) error {
+	if err := k.ensureConfig(); err != nil {
+		return err
+	}
+
+	cmd := exec.Command("kubectl", args...)
+	cmd.Env = []string{
+		fmt.Sprintf("KUBECONFIG=%s", k.ConfigPath()),
+	}
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Start()
 	if err != nil {
 		return err
 	}
 
-	err = clientcmd.WriteToFile(*c, configPath)
+	cmd.Wait()
 
-	return fmt.Errorf("xx")
+	return nil
 }

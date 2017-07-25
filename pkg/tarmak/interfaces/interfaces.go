@@ -24,6 +24,7 @@ type Context interface {
 	SetImageID(string)
 	ContextName() string
 	Log() *logrus.Entry
+	APITunnel() Tunnel
 }
 
 type Environment interface {

@@ -1,0 +1,36 @@
+{
+  "variables": {
+    "zone": "{{env `GCE_ZONE`}}",
+    "tarmak_environment": "{{env `TARMAK_ENVIRONMENT`}}",
+    "tarmak_base_image_name": "{{env `TARMAK_BASE_IMAGE_NAME`}}"
+  },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "account_file": "account.json",
+      "project_id": "jetstack-sandbox",
+      "source_image": "centos-7-v20170719",
+      "ssh_username": "centos",
+      "image_name": "tarmak_{{user `tarmak_environment`}}_{{user `tarmak_base_image_name`}}-{{timestamp}}",
+      "zone": "{{user `zone`}}",
+      "tags": {
+        "tarmak_environment": "{{user `tarmak_environment`}}",
+        "tarmak_base_image_name": "{{user `tarmak_base_image_name`}}"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "rm -f /etc/ssh/ssh_host_*",
+        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip",
+        "pip install awscli"
+      ]
+    }
+  ]
+}

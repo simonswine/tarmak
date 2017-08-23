@@ -55,6 +55,17 @@ test::puppet_module::tarmak:
   variables:
     MODULE_NAME: tarmak
 
+##tarmak
+test::puppet_module::tarmak:
+  <<: *test_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+acceptance::puppet_module::tarmak::centos:
+  <<: *acceptance_puppet_module
+  variables:
+    MODULE_NAME: tarmak
+    BEAKER_TARGET: default
+
 ##vault_client
 test::puppet_module::vault_client:
   <<: *test_puppet_module

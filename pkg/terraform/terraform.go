@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -44,12 +45,12 @@ func (t *Terraform) NewContainer(stack interfaces.Stack) *TerraformContainer {
 	return c
 }
 
-func (t *Terraform) Apply(stack interfaces.Stack, args []string) error {
-	return t.planApply(stack, args, false)
+func (t *Terraform) Apply(stack interfaces.Stack, args []string, ctx context.Context) error {
+	return t.planApply(stack, args, false, ctx)
 }
 
-func (t *Terraform) Destroy(stack interfaces.Stack, args []string) error {
-	return t.planApply(stack, args, true)
+func (t *Terraform) Destroy(stack interfaces.Stack, args []string, ctx context.Context) error {
+	return t.planApply(stack, args, true, ctx)
 }
 
 func (t *Terraform) Output(stack interfaces.Stack) (map[string]interface{}, error) {
@@ -104,7 +105,12 @@ func (t *Terraform) Shell(stack interfaces.Stack, args []string) error {
 	return c.Shell()
 }
 
-func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool) error {
+func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy bool, ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	c := t.NewContainer(stack)
 
 	if destroy {
@@ -116,12 +122,16 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 			return fmt.Errorf("verify of stack %s failed: %s", stack.Name(), err)
 		}
 	}
-
 	if err := c.prepare(); err != nil {
 		return fmt.Errorf("error preparing container: %s", err)
 	}
 	defer c.CleanUpSilent(t.log)
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	initialStateStack := false
 	// check for initial state run on first deployment
 	if !destroy && stack.Name() == config.StackNameState {
@@ -144,10 +154,20 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		c.log.Debug("copied remote state into container")
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	if err := c.Init(); err != nil {
 		return fmt.Errorf("error while terraform init: %s", err)
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	// check for destroying the state stack
 	if destroy && stack.Name() == config.StackNameState {
 		c.log.Infof("moving remote state to local")
@@ -163,17 +183,32 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		}
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	changesNeeded, err := c.Plan(args, destroy)
 	if err != nil {
 		return fmt.Errorf("error while terraform plan: %s", err)
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	if changesNeeded {
 		if err := c.Apply(); err != nil {
 			return fmt.Errorf("error while terraform apply: %s", err)
 		}
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	// upload state if it was an inital state run
 	if initialStateStack {
 		err := c.CopyRemoteState(stack.RemoteState())
@@ -187,6 +222,11 @@ func (t *Terraform) planApply(stack interfaces.Stack, args []string, destroy boo
 		}
 	}
 
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 	// verify that state has been run successfully
 	if !destroy {
 		output, err := c.Output()

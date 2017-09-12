@@ -15,28 +15,59 @@ func (t *Tarmak) Terraform() interfaces.Terraform {
 	return t.terraform
 }
 
-func (t *Tarmak) CmdTerraformApply(args []string) error {
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
+func (t *Tarmak) stackList() ([]interfaces.Stack, error) {
+	var zeroStackList []interfaces.Stack
+	allStacks := t.Context().Stacks()
+
+	selectedStackNames, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
 	if err != nil {
-		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
+		return zeroStackList, fmt.Errorf(
+			"could not find flag %s: %s", FlagTerraformStacks, err,
+		)
+	}
+	if len(selectedStackNames) == 0 {
+		return allStacks, nil
 	}
 
-	t.discoverAMIID()
-	stacks := t.Context().Stacks()
-	for _, stack := range stacks {
-
-		if len(selectStacks) > 0 {
-			found := false
-			for _, selectStack := range selectStacks {
-				if selectStack == stack.Name() {
-					found = true
-				}
-			}
-			if !found {
-				continue
-			}
+	selectedStackMap := map[string]bool{}
+	for _, stack := range allStacks {
+		selectedStackMap[stack.Name()] = false
+	}
+	unrecognisedStackNames := []string{}
+	for _, stackName := range selectedStackNames {
+		_, stackRecognised := selectedStackMap[stackName]
+		if stackRecognised {
+			selectedStackMap[stackName] = true
+		} else {
+			unrecognisedStackNames = append(unrecognisedStackNames, stackName)
 		}
+	}
+	if len(unrecognisedStackNames) > 0 {
+		return zeroStackList, fmt.Errorf(
+			"unrecognised --%s: %v",
+			FlagTerraformStacks,
+			unrecognisedStackNames,
+		)
+	}
+	stackList := []interfaces.Stack{}
+	for _, stack := range allStacks {
+		stackSelected := selectedStackMap[stack.Name()]
+		if stackSelected {
+			stackList = append(stackList, stack)
+		}
+	}
 
+	return stackList, nil
+}
+
+func (t *Tarmak) CmdTerraformApply(args []string) error {
+	t.discoverAMIID()
+	stacks, err := t.stackList()
+	if err != nil {
+		return err
+	}
+	for _, stack := range stacks {
+		t.log.WithField("stack", stack.Name()).Debug("applying stack")
 		err := t.terraform.Apply(stack, args)
 		if err != nil {
 			t.log.Fatal(err)
@@ -46,37 +77,21 @@ func (t *Tarmak) CmdTerraformApply(args []string) error {
 }
 
 func (t *Tarmak) CmdTerraformDestroy(args []string) error {
-	selectStacks, err := t.cmd.Flags().GetStringSlice(FlagTerraformStacks)
-	if err != nil {
-		return fmt.Errorf("could not find flag %s: %s", FlagTerraformStacks, err)
-	}
-
 	forceDestroyStateStack, err := t.cmd.Flags().GetBool(FlagForceDestroyStateStack)
 	if err != nil {
 		return fmt.Errorf("could not find flag %s: %s", FlagForceDestroyStateStack, err)
 	}
-
 	t.discoverAMIID()
-	stacks := t.Context().Stacks()
+	stacks, err := t.stackList()
+	if err != nil {
+		return err
+	}
 	for posStack, _ := range stacks {
 		stack := stacks[len(stacks)-posStack-1]
 		if !forceDestroyStateStack && stack.Name() == config.StackNameState {
 			t.log.Debugf("ignoring stack '%s'", stack.Name())
 			continue
 		}
-
-		if len(selectStacks) > 0 {
-			found := false
-			for _, selectStack := range selectStacks {
-				if selectStack == stack.Name() {
-					found = true
-				}
-			}
-			if !found {
-				continue
-			}
-		}
-
 		err := t.terraform.Destroy(stack, args)
 		if err != nil {
 			return err

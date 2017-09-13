@@ -13,6 +13,7 @@ func Init(t interfaces.Tarmak) {
 	if err != nil {
 		t.Log().Fatal(err)
 	}
+
 	conf.EmptyConfig()
 
 	sel := &utils.Select{
@@ -73,12 +74,43 @@ func Init(t interfaces.Tarmak) {
 	bucketPrefix := open.Ask()
 
 	//Public Zone is an DNS Zone, this need to list existing zones, or have the option to create a new zone. It also needs to validate if the zone is delegated in through the root servers
-	open = &utils.Open{
-		Query:    "What public zone should be used?\nPlease make sure you can delegate this zone.",
-		Prompt:   "> ",
-		Required: true,
+	var publicZone string
+	if cloudProvider == "AWS" {
+		zones := make(map[string]bool)
+		var choice []string
+
+		for _, p := range conf.Providers() {
+			if p.AWS != nil {
+
+				z := p.AWS.PublicZone
+				if _, ok := zones[z]; !ok {
+					zones[z] = true
+				}
+			}
+		}
+
+		for zone := range zones {
+			choice = append(choice, zone)
+		}
+		choice = append(choice, "enter custom zone")
+
+		sel = &utils.Select{
+			Query:   "Select public zone",
+			Prompt:  "> ",
+			Choice:  &choice,
+			Default: 1,
+		}
+		publicZone = sel.Ask()
 	}
-	publicZone := open.Ask()
+
+	if cloudProvider != "AWS" || publicZone == "enter custom zone" {
+		open = &utils.Open{
+			Query:    "What public zone should be used?\nPlease make sure you can delegate this zone.",
+			Prompt:   "> ",
+			Required: true,
+		}
+		publicZone = open.Ask()
+	}
 
 	/* This will be generated from the s3 bucket prefix right now. Not too sure but would like to keep it like that. Maybe we call the bucket_prefix resource_prefix for provider wide resources */
 	//open = &utils.Open{
@@ -88,15 +120,16 @@ func Init(t interfaces.Tarmak) {
 	//}
 	//dynamoDbLockName := open.Ask()
 
-	fmt.Printf("\nCloud Provider---->%s\n", cloudProvider)
-	fmt.Printf("Credentials Source>%s\n", credentialsSource)
+	fmt.Printf("\nCloud Provider ---->%s\n", cloudProvider)
+	fmt.Printf("Provider Name ----->%s\n", name)
+	fmt.Printf("Credentials Source >%s\n", credentialsSource)
 	if credentialsSource == "AWS folder" {
-		fmt.Printf("Profile name------>%s\n", profileName)
+		fmt.Printf("Profile Name ------>%s\n", profileName)
 	} else {
-		fmt.Printf("Vault Prefix------>%s\n", vaultPrefix)
+		fmt.Printf("Vault Prefix ------>%s\n", vaultPrefix)
 	}
-	fmt.Printf("Public Zone------->%s\n", publicZone)
-	fmt.Printf("Bucket Prefix----->%s\n", bucketPrefix)
+	fmt.Printf("Public Zone ------->%s\n", publicZone)
+	fmt.Printf("Bucket Prefix ----->%s\n", bucketPrefix)
 
 	yn := &utils.YesNo{
 		Query:   "Are these input correct?",

@@ -167,15 +167,15 @@ func (i *Init) Run() error {
 	}
 	projectName := open.Ask()
 
-	fmt.Printf("\nEnvironment--->%s\n", environment)
-	fmt.Printf("Context------->%s\n", context)
-	fmt.Printf("Cloud Provider>%s\n", provider)
-	fmt.Printf("Vault Prefix-->%s\n", vaultPrefix)
-	fmt.Printf("Bucket Prefix->%s\n", bucketPrefix)
-	fmt.Printf("Public Zone--->%s\n", publicZone)
-	fmt.Printf("Private Zone-->%s\n", privateZone)
-	fmt.Printf("Contact------->%s\n", contact)
-	fmt.Printf("Project Name-->%s\n", projectName)
+	fmt.Printf("\nEnvironment --->%s\n", environment)
+	fmt.Printf("Context ------->%s\n", context)
+	fmt.Printf("Cloud Provider >%s\n", provider)
+	fmt.Printf("Vault Prefix -->%s\n", vaultPrefix)
+	fmt.Printf("Bucket Prefix ->%s\n", bucketPrefix)
+	fmt.Printf("Public Zone --->%s\n", publicZone)
+	fmt.Printf("Private Zone -->%s\n", privateZone)
+	fmt.Printf("Contact ------->%s\n", contact)
+	fmt.Printf("Project Name -->%s\n", projectName)
 
 	yn := &utils.YesNo{
 		Query:   "Are these input correct?",

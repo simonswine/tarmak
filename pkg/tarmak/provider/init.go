@@ -9,8 +9,11 @@ import (
 )
 
 func Init(t interfaces.Tarmak) {
-
-	t.Config().EmptyConf()
+	conf, err := config.New(t)
+	if err != nil {
+		t.Log().Fatal(err)
+	}
+	conf.EmptyConfig()
 
 	sel := &utils.Select{
 		Query:   "Select a provider",
@@ -20,28 +23,46 @@ func Init(t interfaces.Tarmak) {
 	}
 	cloudProvider := sel.Ask()
 
+	var name string
+	for name == "" {
+		open := &utils.Open{
+			Query:    "Enter a unique name for this provider",
+			Prompt:   "> ",
+			Required: true,
+		}
+		resp := open.Ask()
+		if err := conf.MatchName(resp); err != nil {
+			fmt.Printf("Name is not valid: %v", err)
+		} else {
+			name = resp
+		}
+	}
+
 	sel = &utils.Select{
 		Query:   "Where should the credentials come from?",
 		Prompt:  "> ",
-		Choice:  &[]string{"AWS folder", "Vault Path"},
+		Choice:  &[]string{"AWS folder", "Vault"},
 		Default: 1,
 	}
 	credentialsSource := sel.Ask()
 
-	sel = &utils.Select{
-		Query:  "Which public zone should be used for DNS records?",
-		Prompt: "> ",
-		Choice: &[]string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "ca-central-1", "eu-west-1", "eu-central-1", "eu-west-2", "ap-northeast-1", "ap-northeast-2", "ap-southeast-1", "ap-southeast-2", "ap-south-1", "sa-east-1", "enter custom zone"},
-	}
-	publicZone := sel.Ask()
-
-	if publicZone == "enter custom zone" {
+	var profileName string
+	var vaultPrefix string
+	if credentialsSource == "AWS folder" {
 		open := &utils.Open{
-			Query:    "Enter custom zone",
+			Query:    "What is the profile name?",
 			Prompt:   "> ",
 			Required: true,
 		}
-		publicZone = open.Ask()
+		profileName = open.Ask()
+
+	} else {
+		open := &utils.Open{
+			Query:   "Which path should be used for AWS credentials?",
+			Prompt:  "> ",
+			Default: "jetstack/aws/jetstack-dev/sts/admin",
+		}
+		vaultPrefix = open.Ask()
 	}
 
 	open := &utils.Open{
@@ -51,26 +72,31 @@ func Init(t interfaces.Tarmak) {
 	}
 	bucketPrefix := open.Ask()
 
+	//Public Zone is an DNS Zone, this need to list existing zones, or have the option to create a new zone. It also needs to validate if the zone is delegated in through the root servers
 	open = &utils.Open{
-		Query:    "What is the dynamo DB lock table name?",
+		Query:    "What public zone should be used?\nPlease make sure you can delegate this zone.",
 		Prompt:   "> ",
 		Required: true,
 	}
-	dynamoDbLockName := open.Ask()
+	publicZone := open.Ask()
 
-	open = &utils.Open{
-		Query:    "What is the profile name?",
-		Prompt:   "> ",
-		Required: true,
+	/* This will be generated from the s3 bucket prefix right now. Not too sure but would like to keep it like that. Maybe we call the bucket_prefix resource_prefix for provider wide resources */
+	//open = &utils.Open{
+	//	Query:    "What is the dynamo DB lock table name?",
+	//	Prompt:   "> ",
+	//	Required: true,
+	//}
+	//dynamoDbLockName := open.Ask()
+
+	fmt.Printf("\nCloud Provider---->%s\n", cloudProvider)
+	fmt.Printf("Credentials Source>%s\n", credentialsSource)
+	if credentialsSource == "AWS folder" {
+		fmt.Printf("Profile name------>%s\n", profileName)
+	} else {
+		fmt.Printf("Vault Prefix------>%s\n", vaultPrefix)
 	}
-	profileName := open.Ask()
-
-	fmt.Printf("\nCloud Provider >%s\n", cloudProvider)
-	fmt.Printf("Credentials Source >%s\n", credentialsSource)
-	fmt.Printf("Public Zone >%s\n", publicZone)
-	fmt.Printf("Bucket Prefix >%s\n", bucketPrefix)
-	fmt.Printf("Dynamo DB Lock Name >%s\n", dynamoDbLockName)
-	fmt.Printf("Profile name >%s\n", profileName)
+	fmt.Printf("Public Zone------->%s\n", publicZone)
+	fmt.Printf("Bucket Prefix----->%s\n", bucketPrefix)
 
 	yn := &utils.YesNo{
 		Query:   "Are these input correct?",
@@ -78,11 +104,12 @@ func Init(t interfaces.Tarmak) {
 		Default: true,
 	}
 	if yn.Ask() && cloudProvider == "AWS" {
-		prov := config.NewAWSProfileProvider("AWS", profileName)
+		prov := config.NewAWSProfileProvider(name, profileName)
 		prov.AWS.PublicZone = publicZone
 		prov.AWS.BucketPrefix = bucketPrefix
+		conf.AppendProvider(prov)
 
-		t.Config().AppendProvider(prov)
+		fmt.Print("Accepted.\n")
 	} else {
 		fmt.Print("Aborting.\n")
 	}

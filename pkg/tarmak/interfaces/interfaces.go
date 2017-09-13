@@ -110,8 +110,9 @@ type Config interface {
 	Contexts(environment string) (contexts []*clusterv1alpha1.Cluster)
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)
-	AppendProvider(prov *tarmakv1alpha1.Provider)
-	EmptyConf()
+	AppendProvider(prov *tarmakv1alpha1.Provider) error
+	EmptyConfig()
+	MatchName(name string) error
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
 	CurrentContextName() string

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -52,6 +53,10 @@ func New(tarmak interfaces.Tarmak) (*Config, error) {
 func newConfig() *tarmakv1alpha1.Config {
 	c := &tarmakv1alpha1.Config{}
 	return c
+}
+
+func (c *Config) EmptyConfig() {
+	c.conf = newConfig()
 }
 
 func (c *Config) NewAWSConfigClusterSingle() *tarmakv1alpha1.Config {
@@ -163,12 +168,29 @@ func (c *Config) Providers() (providers []*tarmakv1alpha1.Provider) {
 	return providers
 }
 
-func (c *Config) EmptyConf() {
-	c.conf = newConfig()
+func (c *Config) MatchName(name string) error {
+	r := regexp.MustCompile("[a-z0-9-]+")
+	str := r.FindString(name)
+	if str != name {
+		return fmt.Errorf("error matching name '%s' against regex [a-z0-9-]+", name)
+	}
+
+	return nil
 }
 
-func (c *Config) AppendProvider(prov *tarmakv1alpha1.Provider) {
+func (c *Config) AppendProvider(prov *tarmakv1alpha1.Provider) error {
+	if err := c.MatchName(prov.Name); err != nil {
+		return fmt.Errorf("failed to add provider: %v", err)
+	}
+
+	for _, p := range c.Providers() {
+		if p.Name == prov.Name {
+			return errors.New("failed to add provider: name not unique")
+		}
+	}
+
 	c.conf.Providers = append(c.conf.Providers, *prov)
+	return nil
 }
 
 func (c *Config) configPath() string {

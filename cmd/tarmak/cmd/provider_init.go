@@ -12,7 +12,6 @@ var providerInitCmd = &cobra.Command{
 	Short: "init providers",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
-
 		provider.Init(t)
 	},
 }

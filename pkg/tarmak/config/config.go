@@ -163,6 +163,10 @@ func (c *Config) Providers() (providers []*tarmakv1alpha1.Provider) {
 	return providers
 }
 
+func (c *Config) AppendProvider(prov *tarmakv1alpha1.Provider) {
+	c.conf.Providers = append(c.conf.Providers, *prov)
+}
+
 func (c *Config) configPath() string {
 	return filepath.Join(c.tarmak.ConfigPath(), "tarmak.yaml")
 }

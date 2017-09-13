@@ -3,13 +3,12 @@ package provider
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
 
-func Init(cmd *cobra.Command) {
+func Init(t interfaces.Tarmak) {
 
 	sel := &utils.Select{
 		Query:   "Select a provider",
@@ -44,26 +43,45 @@ func Init(cmd *cobra.Command) {
 	}
 
 	open := &utils.Open{
-		Query:    "What should be the s3 bucket prefix",
+		Query:    "What is the s3 bucket prefix?",
 		Prompt:   "> ",
 		Required: true,
 	}
 	bucketPrefix := open.Ask()
 
 	open = &utils.Open{
-		Query:    "What should be the dynamo db lock table name",
+		Query:    "What is the dynamo DB lock table name?",
 		Prompt:   "> ",
 		Required: true,
 	}
 	dynamoDbLockName := open.Ask()
 
-	fmt.Printf("cloudProvider >%s\n", cloudProvider)
-	fmt.Printf("credentialsSource >%s\n", credentialsSource)
-	fmt.Printf("publicZone >%s\n", publicZone)
-	fmt.Printf("bucketPrefix >%s\n", bucketPrefix)
-	fmt.Printf("dynamoDbLockName >%s\n", dynamoDbLockName)
+	open = &utils.Open{
+		Query:    "What is the profile name?",
+		Prompt:   "> ",
+		Required: true,
+	}
+	profileName := open.Ask()
 
-	prov := config.NewAWSProfileProvider("name", "profile")
-	prov.AWS.PublicZone = publicZone
-	prov.AWS.BucketPrefix = bucketPrefix
+	fmt.Printf("\nCloud Provider >%s\n", cloudProvider)
+	fmt.Printf("Credentials Source >%s\n", credentialsSource)
+	fmt.Printf("Public Zone >%s\n", publicZone)
+	fmt.Printf("Bucket Prefix >%s\n", bucketPrefix)
+	fmt.Printf("Dynamo DB Lock Name >%s\n", dynamoDbLockName)
+	fmt.Printf("Profile name >%s\n", profileName)
+
+	yn := &utils.YesNo{
+		Query:   "Are these input correct?",
+		Prompt:  "> ",
+		Default: true,
+	}
+	if yn.Ask() && cloudProvider == "AWS" {
+		prov := config.NewAWSProfileProvider("AWS", profileName)
+		prov.AWS.PublicZone = publicZone
+		prov.AWS.BucketPrefix = bucketPrefix
+
+		t.Config().AppendProvider(prov)
+	} else {
+		fmt.Print("Aborting.\n")
+	}
 }

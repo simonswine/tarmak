@@ -135,7 +135,7 @@ func (o *Open) Ask() (responce string) {
 
 		if res == "" {
 			if o.Required {
-				fmt.Print("Nothing entered\n")
+				fmt.Print("Nothing entered.\n")
 			} else {
 				return o.Default
 			}
@@ -151,7 +151,7 @@ func Catch() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	fmt.Printf("\nHandle exit\n")
+	fmt.Printf("\nAborting.\n")
 
 	os.Exit(1)
 }

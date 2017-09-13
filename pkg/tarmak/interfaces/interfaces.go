@@ -111,6 +111,7 @@ type Config interface {
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)
 	AppendProvider(prov *tarmakv1alpha1.Provider)
+	EmptyConf()
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
 	CurrentContextName() string

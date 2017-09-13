@@ -59,10 +59,10 @@ func New(cmd *cobra.Command) *Tarmak {
 
 	// TODO: enable me for init
 	// return early for init
-	/*if cmd.Name() == "init" {
-		t.initialize = initialize.New(t)
+	if cmd.Name() == "init" {
+		//t.initialize = initialize.New(t)
 		return t
-	}*/
+	}
 
 	// read config, unless we are initialising the config
 	t.config, err = config.New(t)

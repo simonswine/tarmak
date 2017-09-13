@@ -10,6 +10,8 @@ import (
 
 func Init(t interfaces.Tarmak) {
 
+	t.Config().EmptyConf()
+
 	sel := &utils.Select{
 		Query:   "Select a provider",
 		Prompt:  "> ",

@@ -1,0 +1,87 @@
+#/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
+set -x
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+WORKING_DIR=$(mktemp --directory --tmpdir tarmak-e2e.XXXXXXXXX)
+mkdir --parents $WORKING_DIR
+
+MINIO_CONTAINER_NAME="tarmak-e2e-minio1"
+MINIO_ACCESS_KEY="AKIAIOSFODNN7EXAMPLE"
+MINIO_SECRET_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
+ETCD_CONTAINER_NAME="tarmak-e2e-etcd1"
+ETCD_IMAGE_NAME="tarmak-e2e-etcd-image:latest"
+
+# Start a fake S3 server
+# Pre-create the config and bucket directory to avoid permissions problems
+mkdir -p "${WORKING_DIR}/minio/export/tarmak-etcd-backup"
+mkdir -p "${WORKING_DIR}/minio/config"
+
+docker rm --force "${MINIO_CONTAINER_NAME}" || true
+docker run \
+       --detach \
+       --publish 9000:9000 \
+       --name "${MINIO_CONTAINER_NAME}" \
+       --net host \
+       --user "$UID" \
+       --env "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}" \
+       --env "MINIO_SECRET_KEY=${MINIO_SECRET_KEY}" \
+       --volume "${WORKING_DIR}/minio/export:/export" \
+       --volume "${WORKING_DIR}/minio/config:/.minio" \
+       minio/minio server /export
+
+# Build an image containing etcd and all the tools necessary for running the
+# backup script.
+docker build --tag "${ETCD_IMAGE_NAME}" "${SCRIPT_DIR}"
+
+# Run Etcd
+docker rm --force "${ETCD_CONTAINER_NAME}" || true
+docker run \
+       --detach \
+       --name "${ETCD_CONTAINER_NAME}" \
+       --net host \
+       --volume "${ROOT_DIR}:/TARMAK:ro" \
+       "${ETCD_IMAGE_NAME}" \
+
+# Add a test key
+EXPECTED_KEY="$(uuidgen)"
+EXPECTED_VALUE="$(uuidgen)"
+docker exec \
+       --env "ETCDCTL_API=3" \
+       "${ETCD_CONTAINER_NAME}" \
+       etcdctl put "${EXPECTED_KEY}" "${EXPECTED_VALUE}"
+
+# Run the backup script
+docker exec \
+       --env "AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}" \
+       --env "AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}" \
+       --env "AWS_EXTRA_ARGS=--endpoint-url=http://localhost:9000" \
+       "${ETCD_CONTAINER_NAME}" \
+       /TARMAK/puppet/modules/etcd/files/tarmak-etcd-backup
+
+# Stop the etcd server
+docker rm --force "${ETCD_CONTAINER_NAME}"
+
+# Restart it with the backup as data
+docker run \
+       --detach \
+       --name "${ETCD_CONTAINER_NAME}" \
+       --net host \
+       "${ETCD_IMAGE_NAME}" \
+       etcd --data-dir=/etcd-data
+
+# Get the test key
+actual_value=$(docker exec \
+                      --env "ETCDCTL_API=3" \
+                      "${ETCD_CONTAINER_NAME}" \
+                      etcdctl get "${EXPECTED_KEY}")
+test "${EXPECTED_VALUE}" == "${actual_value}"
+
+tree "${WORKING_DIR}/minio/export/"
+
+# Cleanup
+rm -rf "${WORKING_DIR}"

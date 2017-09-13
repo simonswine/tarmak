@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
+
+MACHINE_ID="$(cat /etc/hostname)"
+BACKUP_DIR="/var/spool/tarmak/backups/etcd"
+BACKUP_PATH="${BACKUP_DIR}/snapshotdb"
+BUCKET_NAME="tarmak-etcd-backup"
+
+mkdir -p "${BACKUP_DIR}"
+
+ETCDCTL_API=3 \
+           etcdctl --write-out=table snapshot save "${BACKUP_PATH}"
+
+aws \
+    ${AWS_EXTRA_ARGS} \
+    s3 sync "${BACKUP_DIR}" "s3://${BUCKET_NAME}/${MACHINE_ID}"

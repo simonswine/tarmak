@@ -16,6 +16,7 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak/assets"
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/environment"
+	"github.com/jetstack/tarmak/pkg/tarmak/initialize"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/kubectl"
 	"github.com/jetstack/tarmak/pkg/tarmak/ssh"
@@ -121,8 +122,13 @@ func (t *Tarmak) initialize() error {
 
 // This initializes a new tarmak config
 func (t *Tarmak) CmdInit() error {
-	return fmt.Errorf("tarmak init needs refactoring")
+	i := initialize.New(t)
+	return i.Run()
 }
+
+//func (t *Tarmak) CmdInit() error {
+//	return fmt.Errorf("tarmak init needs refactoring")
+//}
 
 func (t *Tarmak) Puppet() interfaces.Puppet {
 	return t.puppet

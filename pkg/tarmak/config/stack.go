@@ -1,7 +1,5 @@
 package config
 
-import ()
-
 type Stack struct {
 	State      *StackState      `yaml:"state,omitempty"`
 	Network    *StackNetwork    `yaml:"network,omitempty"`
@@ -32,6 +30,7 @@ type StackState struct {
 }
 
 type StackKubernetes struct {
+	EnableClusterAutoscaler bool `yaml:"enableAutoscaler,omitempty"`
 }
 
 type StackCustom struct {

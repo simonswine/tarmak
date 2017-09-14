@@ -1,4 +1,5 @@
 class kubernetes_addons::cluster_autoscaler(
+  $enabled=$::kubernetes_addons::params::cluster_autoscaler_enabled,
   $image=$::kubernetes_addons::params::cluster_autoscaler_image,
   String $version='',
   $request_cpu=$::kubernetes_addons::params::cluster_autoscaler_request_cpu,
@@ -14,37 +15,38 @@ class kubernetes_addons::cluster_autoscaler(
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
-  $authorization_mode = $::kubernetes::_authorization_mode
-  if member($authorization_mode, 'RBAC'){
-    $rbac_enabled = true
-  } else {
-    $rbac_enabled = false
-  }
-
-  if $version == '' {
-    if versioncmp($::kubernetes::version, '1.7.0') >= 0 {
-      $_version = '0.6.0'
-    } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-      $_version = '0.5.4'
-    } elsif versioncmp($::kubernetes::version, '1.5.0') >= 0 {
-      $_version = '0.4.0'
+  if $enabled == 'true' {
+    $authorization_mode = $::kubernetes::_authorization_mode
+    if member($authorization_mode, 'RBAC'){
+      $rbac_enabled = true
     } else {
-      $_version = '0.3.0'
+      $rbac_enabled = false
     }
-  } else {
-    $_version = $version
-  }
 
-  if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
-    $version_before_1_6 = false
-  } else {
-    $version_before_1_6 = true
-  }
+    if $version == '' {
+      if versioncmp($::kubernetes::version, '1.7.0') >= 0 {
+        $_version = '0.6.0'
+      } elsif versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+        $_version = '0.5.4'
+      } elsif versioncmp($::kubernetes::version, '1.5.0') >= 0 {
+        $_version = '0.4.0'
+      } else {
+        $_version = '0.3.0'
+      }
+    } else {
+      $_version = $version
+    }
 
+    if versioncmp($::kubernetes::version, '1.6.0') >= 0 {
+      $version_before_1_6 = false
+    } else {
+      $version_before_1_6 = true
+    }
 
-  kubernetes::apply{'cluster-autoscaler':
-    manifests => [
-      template('kubernetes_addons/cluster-autoscaler-deployment.yaml.erb'),
-    ],
+    kubernetes::apply{'cluster-autoscaler':
+      manifests => [
+        template('kubernetes_addons/cluster-autoscaler-deployment.yaml.erb'),
+      ],
+    }
   }
 }

@@ -16,6 +16,8 @@ data "template_file" "{{.TFName}}_user_data" {
     vault_ca    = "${base64encode(data.terraform_remote_state.hub_vault.vault_ca)}"
     vault_url   = "${data.terraform_remote_state.hub_vault.vault_url}"
 
+    tarmak_enable_cluster_autoscaler = "${var.enable_cluster_autoscaler}"
+
     tarmak_dns_root      = "${data.terraform_remote_state.hub_network.private_zone}"
     tarmak_role          = "{{.Role.Name}}"
     tarmak_cluster       = "${data.template_file.stack_name.rendered}"

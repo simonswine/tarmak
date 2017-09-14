@@ -23,6 +23,7 @@ write_files:
       Restart=on-failure
       RestartSec=60
 
+
       [Install]
       WantedBy=multi-user.target
 
@@ -37,9 +38,10 @@ write_files:
       TARMAK_ROLE=${tarmak_role}
       TARMAK_CLUSTER=${tarmak_cluster}
       TARMAK_DNS_ROOT=${tarmak_dns_root}
-      TARMAK_HOSTNAME=${tarmak_hostname}
+      TARMAK_HOSTNAME=${tarmak_hostname}      
       TARMAK_ENVIRONMENT=${tarmak_environment}
       TARMAK_DESIRED_COUNT=${tarmak_desired_count}
+      TARMAK_ENABLE_CLUSTER_AUTOSCALER=${tarmak_enable_cluster_autoscaler}
       TARMAK_VOLUME_ID=${tarmak_volume_id}
 
   - path: /etc/profile.d/tarmak.sh

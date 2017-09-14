@@ -20,6 +20,7 @@ variable "state_bucket" {
   default = ""
 }
 
+
 variable "stack_name_prefix" {
   default = ""
 }
@@ -59,4 +60,8 @@ variable "vault_context_name" {
 
 variable "tools_context_name" {
   default = "hub"
+}
+
+variable "enable_cluster_autoscaler" {
+  default = "false"
 }

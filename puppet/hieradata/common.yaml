@@ -17,6 +17,7 @@ tarmak::kubernetes_version: 1.7.3
 tarmak::etcd_instances: 3
 
 # cluster scaler config
+kubernetes_addons::cluster_autoscaler::enabled: "%{::tarmak_enable_cluster_autoscaler}"
 kubernetes_addons::cluster_autoscaler::min_instances: 3
 kubernetes_addons::cluster_autoscaler::max_instances: 10
 

@@ -69,6 +69,11 @@ class kubernetes_addons::params{
   } else {
     $cluster_autoscaler_asg_name=undef
   }
+  if (defined('$kubernetes_addons::cluster_autoscaler::enabled')) and ($::kubernetes_addons::cluster_autoscaler::enabled == 'true') {
+    $cluster_autoscaler_enabled='true'
+  } else {
+    $cluster_autoscaler_enabled='false'
+  }
 
   $dashboard_image='gcr.io/google_containers/kubernetes-dashboard-amd64'
   $dashboard_version='v1.5.1'

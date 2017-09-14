@@ -77,10 +77,20 @@ func newKubernetesStack(s *Stack, conf *config.StackKubernetes) (*KubernetesStac
 }
 
 func (s *KubernetesStack) Variables() map[string]interface{} {
+	output := map[string]interface{}{}
+	k := s.Stack.conf.Kubernetes
+
 	if s.initTokens != nil {
 		return s.initTokens
 	}
-	return map[string]interface{}{}
+	if k.EnableClusterAutoscaler {
+		// Use string as Terraform does not fully support first-class booleans
+		output["enable_cluster_autoscaler"] = "true"
+	} else {
+		output["enable_cluster_autoscaler"] = "false"
+	}
+
+	return output
 }
 
 func (s *KubernetesStack) puppetTarGzPath() (string, error) {

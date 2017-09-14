@@ -15,7 +15,7 @@ class kubernetes_addons::cluster_autoscaler(
 ) inherits ::kubernetes_addons::params {
   require ::kubernetes
 
-  if $enabled == 'true' {
+  if $enabled == true {
     $authorization_mode = $::kubernetes::_authorization_mode
     if member($authorization_mode, 'RBAC'){
       $rbac_enabled = true

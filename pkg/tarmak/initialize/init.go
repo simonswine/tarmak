@@ -2,13 +2,11 @@ package initialize
 
 import (
 	"fmt"
-	//"os"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	//"github.com/tcnksm/go-input"
 
-	//"github.com/jetstack/tarmak/pkg/tarmak/config"
+	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils"
 )
@@ -46,7 +44,12 @@ func parseContextName(in string) (environment string, context string, err error)
 	return environment, context, nil
 }
 
-func (i *Init) Run() error {
+func (i *Init) Run() (err error) {
+
+	conf, err := config.New(i.tarmak)
+	if err != nil {
+		i.tarmak.Log().Fatal(err)
+	}
 
 	/* TODO: support multiple cluster in one env
 	query = "What kind of cluster do you want to initialise?"
@@ -66,22 +69,25 @@ func (i *Init) Run() error {
 	}
 	*/
 
-	query := "What should be the name of the cluster?\nThe name consists of two parts seperated by a dash. First part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+"
+	var environment, context, combinedName string
 	open := &utils.Open{
-		Query:    query,
+		Query:    "What should be the name of the cluster?\nThe name consists of two parts seperated by a dash. First part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+",
 		Prompt:   "> ",
 		Required: true,
 	}
-
-	combinedName := open.Ask()
-	environment, context, err := parseContextName(combinedName)
-	if err != nil {
-		return err
+	for environment == "" {
+		combinedName = open.Ask()
+		environment, context, err = parseContextName(combinedName)
+		if err != nil {
+			fmt.Print(err)
+			open.Query = ""
+		} else if err := conf.UniqueEnvironmentName(environment); err != nil {
+			fmt.Printf("Invalid environment name: %v", err)
+			environment = ""
+		}
 	}
-	// TODO verify environment name not taken yet
 	// TODO ensure max length of both is not longer than 24 chars (verify that limit from AWS)
 
-	query = "Select a provider"
 	sel := &utils.Select{
 		Query:   "Select a provider",
 		Prompt:  "> ",
@@ -125,18 +131,23 @@ func (i *Init) Run() error {
 	}
 	// TODO: validate region
 
+	var bucketPrefix string
 	open = &utils.Open{
-		Query:    "What is the s3 bucket prefix?",
-		Prompt:   "> ",
-		Default:  "tarmak-",
-		Required: true,
+		Query:   "What is the bucket prefix?",
+		Prompt:  "> ",
+		Default: "tarmak-",
 	}
-	bucketPrefix := open.Ask()
-	// TODO: verify bucket prefix [a-z0-9-_]
+	for bucketPrefix == "" {
+		bucketPrefix = open.Ask()
+		if err := conf.ValidName(bucketPrefix, "[a-z0-9-_]+"); err != nil {
+			fmt.Printf("Name is not valid: %v", err)
+			open.Query = ""
+			bucketPrefix = ""
+		}
+	}
 
-	query = "What public zone should be used?\nPlease make sure you can delegate this zone to AWS!"
 	open = &utils.Open{
-		Query:    query,
+		Query:    "What public zone should be used?\nPlease make sure you can delegate this zone.",
 		Prompt:   "> ",
 		Required: true,
 	}

@@ -58,10 +58,8 @@ func New(cmd *cobra.Command) *Tarmak {
 	t.log.Level = logrus.DebugLevel
 	t.log.Out = os.Stderr
 
-	// TODO: enable me for init
 	// return early for init
 	if cmd.Name() == "init" {
-		//t.initialize = initialize.New(t)
 		return t
 	}
 

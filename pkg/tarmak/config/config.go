@@ -145,6 +145,9 @@ func (c *Config) Environment(name string) (*tarmakv1alpha1.Environment, error) {
 }
 
 func (c *Config) Environments() (environments []*tarmakv1alpha1.Environment) {
+	if c.conf == nil {
+		return environments
+	}
 	for pos, _ := range c.conf.Environments {
 		environments = append(environments, &c.conf.Environments[pos])
 	}
@@ -162,34 +165,53 @@ func (c *Config) Provider(name string) (context *tarmakv1alpha1.Provider, err er
 }
 
 func (c *Config) Providers() (providers []*tarmakv1alpha1.Provider) {
+	if c.conf == nil {
+		return providers
+	}
 	for pos, _ := range c.conf.Providers {
 		providers = append(providers, &c.conf.Providers[pos])
 	}
 	return providers
 }
 
-func (c *Config) MatchName(name string) error {
-	r := regexp.MustCompile("[a-z0-9-]+")
+func (c *Config) ValidName(name, regex string) error {
+	r := regexp.MustCompile(regex)
 	str := r.FindString(name)
 	if str != name {
-		return fmt.Errorf("error matching name '%s' against regex [a-z0-9-]+", name)
+		return fmt.Errorf("error matching name '%s' against regex %s", name, regex)
 	}
 
 	return nil
 }
 
+func (c *Config) UniqueProviderName(name string) error {
+	for _, p := range c.Providers() {
+		if p.Name == name {
+			return fmt.Errorf("name '%s' not unique", name)
+		}
+	}
+	return nil
+}
+
 func (c *Config) AppendProvider(prov *tarmakv1alpha1.Provider) error {
-	if err := c.MatchName(prov.Name); err != nil {
+	if err := c.ValidName(prov.Name, "[a-z0-9-]+"); err != nil {
 		return fmt.Errorf("failed to add provider: %v", err)
 	}
 
-	for _, p := range c.Providers() {
-		if p.Name == prov.Name {
-			return errors.New("failed to add provider: name not unique")
-		}
+	if err := c.UniqueProviderName(prov.Name); err != nil {
+		return fmt.Errorf("failed to add provider: %v", err)
 	}
 
 	c.conf.Providers = append(c.conf.Providers, *prov)
+	return nil
+}
+
+func (c *Config) UniqueEnvironmentName(name string) error {
+	for _, e := range c.Environments() {
+		if e.Name == name {
+			return fmt.Errorf("name '%s' not unique", name)
+		}
+	}
 	return nil
 }
 

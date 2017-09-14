@@ -14,7 +14,10 @@ func Init(t interfaces.Tarmak) {
 		t.Log().Fatal(err)
 	}
 
-	conf.EmptyConfig()
+	// If no providers, need to init (not nil)
+	if conf.Providers() == nil {
+		conf.EmptyConfig()
+	}
 
 	sel := &utils.Select{
 		Query:   "Select a provider",
@@ -32,7 +35,9 @@ func Init(t interfaces.Tarmak) {
 	}
 	for name == "" {
 		resp := open.Ask()
-		if err := conf.MatchName(resp); err != nil {
+		if err := conf.ValidName(resp, "[a-z0-9-]+"); err != nil {
+			fmt.Printf("Name is not valid: %v", err)
+		} else if err := conf.UniqueProviderName(resp); err != nil {
 			fmt.Printf("Name is not valid: %v", err)
 		} else {
 			name = resp
@@ -131,7 +136,7 @@ func Init(t interfaces.Tarmak) {
 		fmt.Printf("Vault Prefix ------>%s\n", vaultPrefix)
 	}
 	fmt.Printf("Public Zone ------->%s\n", publicZone)
-	fmt.Printf("Resource Prefix ----->%s\n", resourcePrefix)
+	fmt.Printf("Resource Prefix --->%s\n", resourcePrefix)
 
 	yn := &utils.YesNo{
 		Query:   "Are these input correct?",

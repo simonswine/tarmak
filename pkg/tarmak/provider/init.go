@@ -25,12 +25,12 @@ func Init(t interfaces.Tarmak) {
 	cloudProvider := sel.Ask()
 
 	var name string
+	open := &utils.Open{
+		Query:    "Enter a unique name for this provider",
+		Prompt:   "> ",
+		Required: true,
+	}
 	for name == "" {
-		open := &utils.Open{
-			Query:    "Enter a unique name for this provider",
-			Prompt:   "> ",
-			Required: true,
-		}
 		resp := open.Ask()
 		if err := conf.MatchName(resp); err != nil {
 			fmt.Printf("Name is not valid: %v", err)
@@ -66,29 +66,31 @@ func Init(t interfaces.Tarmak) {
 		vaultPrefix = open.Ask()
 	}
 
-	open := &utils.Open{
-		Query:    "What is the s3 bucket prefix?",
+	query := "Whats is the s3 bucket prefix?"
+	if cloudProvider != "AWS" {
+		query = "What is the resource prefix?"
+	}
+	open = &utils.Open{
+		Query:    query,
 		Prompt:   "> ",
 		Required: true,
 	}
-	bucketPrefix := open.Ask()
+	resourcePrefix := open.Ask()
 
-	//Public Zone is an DNS Zone, this need to list existing zones, or have the option to create a new zone. It also needs to validate if the zone is delegated in through the root servers
+	// TODO: Validate if the zone is delegated in through the root servers
 	var publicZone string
 	if cloudProvider == "AWS" {
 		zones := make(map[string]bool)
 		var choice []string
 
+		// create map of all zones used in all providers
 		for _, p := range conf.Providers() {
 			if p.AWS != nil {
-
-				z := p.AWS.PublicZone
-				if _, ok := zones[z]; !ok {
-					zones[z] = true
-				}
+				zones[p.AWS.PublicZone] = true
 			}
 		}
 
+		// put list in []string for input select
 		for zone := range zones {
 			choice = append(choice, zone)
 		}
@@ -129,7 +131,7 @@ func Init(t interfaces.Tarmak) {
 		fmt.Printf("Vault Prefix ------>%s\n", vaultPrefix)
 	}
 	fmt.Printf("Public Zone ------->%s\n", publicZone)
-	fmt.Printf("Bucket Prefix ----->%s\n", bucketPrefix)
+	fmt.Printf("Resource Prefix ----->%s\n", resourcePrefix)
 
 	yn := &utils.YesNo{
 		Query:   "Are these input correct?",
@@ -139,7 +141,7 @@ func Init(t interfaces.Tarmak) {
 	if yn.Ask() && cloudProvider == "AWS" {
 		prov := config.NewAWSProfileProvider(name, profileName)
 		prov.AWS.PublicZone = publicZone
-		prov.AWS.BucketPrefix = bucketPrefix
+		prov.AWS.BucketPrefix = resourcePrefix
 		conf.AppendProvider(prov)
 
 		fmt.Print("Accepted.\n")

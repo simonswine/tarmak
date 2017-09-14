@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/badoux/checkmail"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -73,6 +72,7 @@ func (i *Init) Run() (err error) {
 		return err
 	}
 	*/
+
 	var environment, context, combinedName string
 	open := &utils.Open{
 		Query:    "What should be the name of the cluster?\nThe name consists of two parts seperated by a dash. First part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+",
@@ -108,14 +108,51 @@ func (i *Init) Run() (err error) {
 	}
 	credentialsSource := sel.Ask()
 
+	var profileName string
 	var vaultPrefix string
 	if credentialsSource == "AWS folder" {
-		open = &utils.Open{
+		open := &utils.Open{
+			Query:    "What is the profile name?",
+			Prompt:   "> ",
+			Required: true,
+		}
+		profileName = open.Ask()
+
+	} else {
+		open := &utils.Open{
 			Query:   "Which path should be used for AWS credentials?",
 			Prompt:  "> ",
 			Default: "jetstack/aws/jetstack-dev/sts/admin",
 		}
 		vaultPrefix = open.Ask()
+	}
+
+	open = &utils.Open{
+		Query:    "What is the mail address of someone responsible?",
+		Prompt:   "> ",
+		Default:  conf.Contact(),
+		Required: true,
+	}
+	contact := open.Ask()
+
+	var fail error
+	if err = utils.ValidateFormat(contact); err != nil {
+		fail = err
+
+		// Not sure if this is a good idea bc of privacy concerns
+	} else if err = utils.ValidateHost(contact); err != nil {
+		fail = err
+	}
+	if fail != nil {
+		yn := &utils.YesNo{
+			Query:   fmt.Sprintf("Error verifying email, did you spell it correctly?:\n%v\nUse anyway?", fail),
+			Prompt:  "> ",
+			Default: true,
+		}
+		if !yn.Ask() {
+			fmt.Printf("Aborting.\n")
+			return nil
+		}
 	}
 
 	sel = &utils.Select{
@@ -167,38 +204,6 @@ func (i *Init) Run() (err error) {
 	// TODO: verify domain name
 
 	open = &utils.Open{
-		Query:    "What is the mail address of someone responsible?",
-		Prompt:   "> ",
-		Default:  conf.Contact(),
-		Required: true,
-	}
-	contact := open.Ask()
-
-	var fail string
-	if err = checkmail.ValidateFormat(contact); err != nil {
-		fail = fmt.Sprint(err)
-
-		/* Not sure if this is a good idea bc of privacy concerns
-		It doesn't phone home though
-		https://github.com/badoux/checkmail/blob/master/checkmail.go#L44
-		*/
-	} else if err = checkmail.ValidateHost(contact); err != nil {
-		fail = fmt.Sprintf("could not reslove host, did you spell it correctly?\n%v", err)
-	}
-	if fail != "" {
-		yn := &utils.YesNo{
-			Query:   fmt.Sprintf("Error verifying email: %v\nUse anyway?", fail),
-			Prompt:  "> ",
-			Default: true,
-		}
-		if !yn.Ask() {
-			fmt.Printf("Aborting.\n")
-			return nil
-		}
-	}
-	// TODO: use default from existing config
-
-	open = &utils.Open{
 		Query:   "What is the project name?",
 		Prompt:  "> ",
 		Default: "k8s-playground",
@@ -208,11 +213,15 @@ func (i *Init) Run() (err error) {
 	fmt.Printf("\nEnvironment --->%s\n", environment)
 	fmt.Printf("Context ------->%s\n", context)
 	fmt.Printf("Cloud Provider >%s\n", provider)
-	fmt.Printf("Vault Prefix -->%s\n", vaultPrefix)
+	if credentialsSource == "AWS folder" {
+		fmt.Printf("Profile Name -->%s\n", profileName)
+	} else {
+		fmt.Printf("Vault Prefix -->%s\n", vaultPrefix)
+	}
+	fmt.Printf("Contact ------->%s\n", contact)
 	fmt.Printf("Bucket Prefix ->%s\n", bucketPrefix)
 	fmt.Printf("Public Zone --->%s\n", publicZone)
 	fmt.Printf("Private Zone -->%s\n", privateZone)
-	fmt.Printf("Contact ------->%s\n", contact)
 	fmt.Printf("Project Name -->%s\n", projectName)
 
 	yn := &utils.YesNo{

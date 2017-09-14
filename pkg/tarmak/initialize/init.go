@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/badoux/checkmail"
 
 	"github.com/jetstack/tarmak/pkg/tarmak/config"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -46,9 +47,13 @@ func parseContextName(in string) (environment string, context string, err error)
 
 func (i *Init) Run() (err error) {
 
-	conf, err := config.New(i.tarmak)
-	if err != nil {
-		i.tarmak.Log().Fatal(err)
+	conf := i.tarmak.Config()
+	if conf.ConfigIsEmpty() {
+		conf, err = config.New(i.tarmak)
+		if err != nil {
+			i.tarmak.Log().Fatal(err)
+		}
+		conf.InitConfig()
 	}
 
 	/* TODO: support multiple cluster in one env
@@ -68,7 +73,6 @@ func (i *Init) Run() (err error) {
 		return err
 	}
 	*/
-
 	var environment, context, combinedName string
 	open := &utils.Open{
 		Query:    "What should be the name of the cluster?\nThe name consists of two parts seperated by a dash. First part is the environment name, second part the cluster name. Both names should be matching [a-z0-9]+",
@@ -165,11 +169,34 @@ func (i *Init) Run() (err error) {
 	open = &utils.Open{
 		Query:    "What is the mail address of someone responsible?",
 		Prompt:   "> ",
+		Default:  conf.Contact(),
 		Required: true,
 	}
 	contact := open.Ask()
+
+	var fail string
+	if err = checkmail.ValidateFormat(contact); err != nil {
+		fail = fmt.Sprint(err)
+
+		/* Not sure if this is a good idea bc of privacy concerns
+		It doesn't phone home though
+		https://github.com/badoux/checkmail/blob/master/checkmail.go#L44
+		*/
+	} else if err = checkmail.ValidateHost(contact); err != nil {
+		fail = fmt.Sprintf("could not reslove host, did you spell it correctly?\n%v", err)
+	}
+	if fail != "" {
+		yn := &utils.YesNo{
+			Query:   fmt.Sprintf("Error verifying email: %v\nUse anyway?", fail),
+			Prompt:  "> ",
+			Default: true,
+		}
+		if !yn.Ask() {
+			fmt.Printf("Aborting.\n")
+			return nil
+		}
+	}
 	// TODO: use default from existing config
-	// TODO: verify mail
 
 	open = &utils.Open{
 		Query:   "What is the project name?",

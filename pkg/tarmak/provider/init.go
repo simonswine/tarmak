@@ -16,7 +16,7 @@ func Init(t interfaces.Tarmak) {
 
 	// If no providers, need to init (not nil)
 	if conf.Providers() == nil {
-		conf.EmptyConfig()
+		conf.InitConfig()
 	}
 
 	sel := &utils.Select{

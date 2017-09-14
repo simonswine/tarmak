@@ -113,7 +113,8 @@ type Config interface {
 	AppendProvider(prov *tarmakv1alpha1.Provider) error
 	UniqueProviderName(name string) error
 	ValidName(name, regex string) error
-	EmptyConfig()
+	InitConfig()
+	ConfigIsEmpty() bool
 	Environment(name string) (environment *tarmakv1alpha1.Environment, err error)
 	Environments() (environments []*tarmakv1alpha1.Environment)
 	UniqueEnvironmentName(name string) error

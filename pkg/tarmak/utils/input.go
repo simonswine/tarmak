@@ -117,7 +117,7 @@ func (o *Open) Ask() (responce string) {
 	if o.Query != "" {
 		fmt.Printf("\n%s", o.Query)
 	}
-	if !o.Required {
+	if o.Default != "" {
 		fmt.Printf(" (default %s)", o.Default)
 	}
 	fmt.Print("\n")
@@ -134,7 +134,7 @@ func (o *Open) Ask() (responce string) {
 		res = res[0 : len(res)-1]
 
 		if res == "" {
-			if o.Required {
+			if o.Default == "" && o.Required {
 				fmt.Print("Nothing entered.\n")
 			} else {
 				return o.Default

@@ -50,12 +50,16 @@ func New(tarmak interfaces.Tarmak) (*Config, error) {
 	return c, nil
 }
 
+func (c *Config) ConfigIsEmpty() bool {
+	return c == nil
+}
+
 func newConfig() *tarmakv1alpha1.Config {
 	c := &tarmakv1alpha1.Config{}
 	return c
 }
 
-func (c *Config) EmptyConfig() {
+func (c *Config) InitConfig() {
 	c.conf = newConfig()
 }
 

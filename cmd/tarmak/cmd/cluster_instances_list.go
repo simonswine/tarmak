@@ -12,9 +12,9 @@ import (
 	"github.com/jetstack/tarmak/pkg/tarmak"
 )
 
-var listCmd = &cobra.Command{
+var clusterInstancesListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "list nodes of the context",
+	Short: "list instances of the cluster",
 	Run: func(cmd *cobra.Command, args []string) {
 		t := tarmak.New(cmd)
 		hosts, err := t.Context().Environment().Provider().ListHosts()
@@ -39,5 +39,5 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(listCmd)
+	clusterInstancesCmd.AddCommand(clusterInstancesListCmd)
 }

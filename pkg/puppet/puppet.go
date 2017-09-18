@@ -8,6 +8,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/pkg/archive"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 )
 
@@ -47,4 +48,35 @@ func (p *Puppet) TarGz(writer io.Writer) error {
 	}
 
 	return nil
+}
+
+func kubernetesConfig(conf *clusterv1alpha1.Kubernetes) (lines []string) {
+	if conf == nil {
+		return
+	}
+	if conf.Version != "" {
+		lines = append(lines, fmt.Sprintf(`tarmak::kubernetes_version: "%s"`, conf.Kubernetes.Version))
+	}
+}
+
+func contentGlobalConfig(conf *clusterv1alpha1.Cluster) (lines []string) {
+	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
+	return lines
+}
+
+func contentInstancePoolConfig(conf *clusterv1alpha1.ServerPool) (lines []string) {
+	lines = append(lines, kubernetesConfig(conf.Kubernetes)...)
+	return lines
+}
+
+func (p *Puppet) HieraData(context interfaces.Context) {
+
+	// get global cluster config
+	clusterCfg := context.Config()
+
+	// loop through instance pools
+	for _, instancePool := range context.NodeGroups() {
+		cfg := instancePool.Config()
+	}
+
 }

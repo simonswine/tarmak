@@ -17,12 +17,12 @@ func newCluster(environment string, name string) *clusterv1alpha1.Cluster {
 // This creates a new cluster for a single cluster environment
 func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
-	c.ServerPools = []clusterv1alpha1.ServerPool{
-		*newServerPoolBastion(),
-		*newServerPoolVault(),
-		*newServerPoolEtcd(),
-		*newServerPoolMaster(),
-		*newServerPoolWorker(),
+	c.InstancePools = []clusterv1alpha1.ServerPool{
+		*newInstancePoolBastion(),
+		*newInstancePoolVault(),
+		*newInstancePoolEtcd(),
+		*newInstancePoolMaster(),
+		*newInstancePoolWorker(),
 	}
 	return c
 }
@@ -30,10 +30,10 @@ func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster 
 // This creates a new cluster for a multi cluster environment
 func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
-	c.ServerPools = []clusterv1alpha1.ServerPool{
-		*newServerPoolEtcd(),
-		*newServerPoolMaster(),
-		*newServerPoolWorker(),
+	c.InstancePools = []clusterv1alpha1.ServerPool{
+		*newInstancePoolEtcd(),
+		*newInstancePoolMaster(),
+		*newInstancePoolWorker(),
 	}
 	return c
 }
@@ -41,25 +41,25 @@ func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 // This creates a new hub for a multi cluster environment
 func NewHub(environment string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, "hub")
-	c.ServerPools = []clusterv1alpha1.ServerPool{
-		*newServerPoolBastion(),
-		*newServerPoolVault(),
+	c.InstancePools = []clusterv1alpha1.ServerPool{
+		*newInstancePoolBastion(),
+		*newInstancePoolVault(),
 	}
 	return c
 }
 
-func newServerPool() *clusterv1alpha1.ServerPool {
-	sp := &clusterv1alpha1.ServerPool{}
+func newInstancePool() *clusterv1alpha1.ServerPool {
+	sp := &clusterv1alpha1.InstancePool{}
 	return sp
 }
 
 // This creates a bastion nodeGroup
-func newServerPoolBastion() *clusterv1alpha1.ServerPool {
-	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeBastion
+func newInstancePoolBastion() *clusterv1alpha1.ServerPool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeBastion
 	sp.MinCount = 1
 	sp.MaxCount = 1
-	sp.Size = clusterv1alpha1.ServerPoolSizeTiny
+	sp.Size = clusterv1alpha1.InstancePoolSizeTiny
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -70,12 +70,12 @@ func newServerPoolBastion() *clusterv1alpha1.ServerPool {
 }
 
 // This creates a etcd serverPool
-func newServerPoolEtcd() *clusterv1alpha1.ServerPool {
-	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeEtcd
+func newInstancePoolEtcd() *clusterv1alpha1.ServerPool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeEtcd
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = clusterv1alpha1.ServerPoolSizeSmall
+	sp.Size = clusterv1alpha1.InstancePoolSizeSmall
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -91,12 +91,12 @@ func newServerPoolEtcd() *clusterv1alpha1.ServerPool {
 }
 
 // This creates a vault serverPool
-func newServerPoolVault() *clusterv1alpha1.ServerPool {
-	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeVault
+func newInstancePoolVault() *clusterv1alpha1.ServerPool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeVault
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = clusterv1alpha1.ServerPoolSizeTiny
+	sp.Size = clusterv1alpha1.InstancePoolSizeTiny
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -112,12 +112,12 @@ func newServerPoolVault() *clusterv1alpha1.ServerPool {
 }
 
 // This creates a master serverPool
-func newServerPoolMaster() *clusterv1alpha1.ServerPool {
-	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeMaster
+func newInstancePoolMaster() *clusterv1alpha1.ServerPool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeMaster
 	sp.MinCount = 1
 	sp.MaxCount = 1
-	sp.Size = clusterv1alpha1.ServerPoolSizeMedium
+	sp.Size = clusterv1alpha1.InstancePoolSizeMedium
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},
@@ -133,12 +133,12 @@ func newServerPoolMaster() *clusterv1alpha1.ServerPool {
 }
 
 // This creates a node serverPool
-func newServerPoolWorker() *clusterv1alpha1.ServerPool {
-	sp := newServerPool()
-	sp.Type = clusterv1alpha1.ServerPoolTypeWorker
+func newInstancePoolWorker() *clusterv1alpha1.ServerPool {
+	sp := newInstancePool()
+	sp.Type = clusterv1alpha1.InstancePoolTypeWorker
 	sp.MinCount = 3
 	sp.MaxCount = 3
-	sp.Size = clusterv1alpha1.ServerPoolSizeMedium
+	sp.Size = clusterv1alpha1.InstancePoolSizeMedium
 	sp.Volumes = []clusterv1alpha1.Volume{
 		clusterv1alpha1.Volume{
 			ObjectMeta: metav1.ObjectMeta{Name: "root"},

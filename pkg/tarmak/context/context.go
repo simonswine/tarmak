@@ -11,8 +11,8 @@ import (
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/tarmak/instance_pool"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
-	"github.com/jetstack/tarmak/pkg/tarmak/node_group"
 	"github.com/jetstack/tarmak/pkg/tarmak/role"
 	"github.com/jetstack/tarmak/pkg/tarmak/stack"
 )
@@ -34,9 +34,9 @@ type Context struct {
 	networkCIDR  *net.IPNet
 	log          *logrus.Entry
 
-	imageIDs   map[string]string
-	nodeGroups []interfaces.NodeGroup
-	roles      map[string]*role.Role
+	imageIDs      map[string]string
+	instancePools []interfaces.InstancePool
+	roles         map[string]*role.Role
 }
 
 var _ interfaces.Context = &Context{}
@@ -63,22 +63,22 @@ func NewFromConfig(environment interfaces.Environment, conf *clusterv1alpha1.Clu
 	for pos, _ := range context.conf.InstancePools {
 		instancePool := context.conf.InstancePools[pos]
 		// create node groups
-		nodeGroup, err := node_group.NewFromConfig(context, &instancePool)
+		pool, err := instance_pool.NewFromConfig(context, &instancePool)
 		if err != nil {
 			result = multierror.Append(result, err)
 			continue
 		}
-		context.nodeGroups = append(context.nodeGroups, nodeGroup)
+		context.instancePools = append(context.instancePools, pool)
 	}
 
 	return context, result
 }
 
-func (c *Context) NodeGroups() []interfaces.NodeGroup {
-	return c.nodeGroups
+func (c *Context) InstancePools() []interfaces.InstancePool {
+	return c.instancePools
 }
 
-func (c *Context) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.ServerPool) {
+func (c *Context) InstancePoolsMap() (instancePoolsMap map[string][]*clusterv1alpha1.InstancePool) {
 	instancePoolsMap = make(map[string][]*clusterv1alpha1.InstancePool)
 	for pos, _ := range c.conf.InstancePools {
 		pool := &c.conf.InstancePools[pos]
@@ -341,8 +341,8 @@ func (c *Context) Role(roleName string) *role.Role {
 
 func (c *Context) Roles() (roles []*role.Role) {
 	roleMap := map[string]bool{}
-	for _, nodeGroup := range c.NodeGroups() {
-		r := nodeGroup.Role()
+	for _, instancePool := range c.InstancePools() {
+		r := instancePool.Role()
 		if _, ok := roleMap[r.Name()]; !ok {
 			roles = append(roles, r)
 			roleMap[r.Name()] = true

@@ -32,14 +32,14 @@ const (
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	CloudId           string          `json:"cloudId,omitempty"`
-	InstancePools     []InstancePools `json:"instancePools,omitempty"`
-	Cloud             string          `json:"cloud,omitempty"`
-	Location          string          `json:"location,omitempty"`
-	Network           *Network        `json:"network,omitempty"`
-	Values            *Values         `json:"values,omitempty"`
-	KubernetesAPI     *KubernetesAPI  `json:"kubernetesAPI,omitempty"`
-	GroupIdentifier   string          `json:"groupIdentifier,omitempty"`
+	CloudId           string         `json:"cloudId,omitempty"`
+	InstancePools     []InstancePool `json:"instancePools,omitempty"`
+	Cloud             string         `json:"cloud,omitempty"`
+	Location          string         `json:"location,omitempty"`
+	Network           *Network       `json:"network,omitempty"`
+	Values            *Values        `json:"values,omitempty"`
+	KubernetesAPI     *KubernetesAPI `json:"kubernetesAPI,omitempty"`
+	GroupIdentifier   string         `json:"groupIdentifier,omitempty"`
 
 	Environment string      `json:"environment,omitempty"`
 	Kubernetes  *Kubernetes `json:"kubernetes,omitempty"`

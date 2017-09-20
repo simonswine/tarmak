@@ -17,7 +17,7 @@ func newCluster(environment string, name string) *clusterv1alpha1.Cluster {
 // This creates a new cluster for a single cluster environment
 func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
-	c.InstancePools = []clusterv1alpha1.ServerPool{
+	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolBastion(),
 		*newInstancePoolVault(),
 		*newInstancePoolEtcd(),
@@ -30,7 +30,7 @@ func NewClusterSingle(environment string, name string) *clusterv1alpha1.Cluster 
 // This creates a new cluster for a multi cluster environment
 func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, name)
-	c.InstancePools = []clusterv1alpha1.ServerPool{
+	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolEtcd(),
 		*newInstancePoolMaster(),
 		*newInstancePoolWorker(),
@@ -41,20 +41,20 @@ func NewClusterMulti(environment string, name string) *clusterv1alpha1.Cluster {
 // This creates a new hub for a multi cluster environment
 func NewHub(environment string) *clusterv1alpha1.Cluster {
 	c := newCluster(environment, "hub")
-	c.InstancePools = []clusterv1alpha1.ServerPool{
+	c.InstancePools = []clusterv1alpha1.InstancePool{
 		*newInstancePoolBastion(),
 		*newInstancePoolVault(),
 	}
 	return c
 }
 
-func newInstancePool() *clusterv1alpha1.ServerPool {
+func newInstancePool() *clusterv1alpha1.InstancePool {
 	sp := &clusterv1alpha1.InstancePool{}
 	return sp
 }
 
-// This creates a bastion nodeGroup
-func newInstancePoolBastion() *clusterv1alpha1.ServerPool {
+// This creates a bastion instancePool
+func newInstancePoolBastion() *clusterv1alpha1.InstancePool {
 	sp := newInstancePool()
 	sp.Type = clusterv1alpha1.InstancePoolTypeBastion
 	sp.MinCount = 1
@@ -69,8 +69,8 @@ func newInstancePoolBastion() *clusterv1alpha1.ServerPool {
 	return sp
 }
 
-// This creates a etcd serverPool
-func newInstancePoolEtcd() *clusterv1alpha1.ServerPool {
+// This creates a etcd instancePool
+func newInstancePoolEtcd() *clusterv1alpha1.InstancePool {
 	sp := newInstancePool()
 	sp.Type = clusterv1alpha1.InstancePoolTypeEtcd
 	sp.MinCount = 3
@@ -90,8 +90,8 @@ func newInstancePoolEtcd() *clusterv1alpha1.ServerPool {
 	return sp
 }
 
-// This creates a vault serverPool
-func newInstancePoolVault() *clusterv1alpha1.ServerPool {
+// This creates a vault instancePool
+func newInstancePoolVault() *clusterv1alpha1.InstancePool {
 	sp := newInstancePool()
 	sp.Type = clusterv1alpha1.InstancePoolTypeVault
 	sp.MinCount = 3
@@ -111,8 +111,8 @@ func newInstancePoolVault() *clusterv1alpha1.ServerPool {
 	return sp
 }
 
-// This creates a master serverPool
-func newInstancePoolMaster() *clusterv1alpha1.ServerPool {
+// This creates a master instancePool
+func newInstancePoolMaster() *clusterv1alpha1.InstancePool {
 	sp := newInstancePool()
 	sp.Type = clusterv1alpha1.InstancePoolTypeMaster
 	sp.MinCount = 1
@@ -132,8 +132,8 @@ func newInstancePoolMaster() *clusterv1alpha1.ServerPool {
 	return sp
 }
 
-// This creates a node serverPool
-func newInstancePoolWorker() *clusterv1alpha1.ServerPool {
+// This creates a node instancePool
+func newInstancePoolWorker() *clusterv1alpha1.InstancePool {
 	sp := newInstancePool()
 	sp.Type = clusterv1alpha1.InstancePoolTypeWorker
 	sp.MinCount = 3

@@ -66,22 +66,39 @@ docker exec \
 # Stop the etcd server
 docker rm --force "${ETCD_CONTAINER_NAME}"
 
-# Restart it with the backup as data
+# Restore the backup data
+docker run \
+       --rm \
+       --volume "${WORKING_DIR}/etcd-data:/etcd-data" \
+       --volume "${WORKING_DIR}/minio/export/tarmak-etcd-backup:/BACKUP" \
+       --env "ETCDCTL_API=3" \
+       "${ETCD_IMAGE_NAME}" \
+       etcdctl snapshot restore --data-dir /etcd-data/data /BACKUP/drax/snapshotdb
+
+# Start a new etcd with the restored data
 docker run \
        --detach \
        --name "${ETCD_CONTAINER_NAME}" \
        --net host \
+       --volume "${WORKING_DIR}/etcd-data:/etcd-data" \
        "${ETCD_IMAGE_NAME}" \
-       etcd --data-dir=/etcd-data
+       etcd --data-dir /etcd-data/data
 
 # Get the test key
-actual_value=$(docker exec \
-                      --env "ETCDCTL_API=3" \
-                      "${ETCD_CONTAINER_NAME}" \
-                      etcdctl get "${EXPECTED_KEY}")
-test "${EXPECTED_VALUE}" == "${actual_value}"
+ACTUAL_VALUE=$(
+    docker exec \
+           --env "ETCDCTL_API=3" \
+           "${ETCD_CONTAINER_NAME}" \
+           etcdctl get \
+           --write-out json "${EXPECTED_KEY}" | jq -r '.kvs[0].value')
 
-tree "${WORKING_DIR}/minio/export/"
+if ! test "${EXPECTED_VALUE}" == "${ACTUAL_VALUE}"; then
+    tree "${WORKING_DIR}/minio/export/"
+    docker exec \
+           --env ETCDCTL_API=3 \
+           "${ETCD_CONTAINER_NAME}" \
+           etcdctl get --write-out json "" --from-key | jq .
+fi
 
 # Cleanup
 rm -rf "${WORKING_DIR}"

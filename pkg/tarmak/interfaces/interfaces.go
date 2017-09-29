@@ -82,6 +82,7 @@ type Provider interface {
 	VolumeType(string) (string, error)
 	String() string
 	AskEnvironmentLocation(Initialize) (string, error)
+	AskInstancePoolLocation(Initialize) (zones []string, err error)
 }
 
 type Stack interface {
@@ -124,7 +125,7 @@ type Tarmak interface {
 type Config interface {
 	Cluster(environment string, name string) (cluster *clusterv1alpha1.Cluster, err error)
 	Clusters(environment string) (clusters []*clusterv1alpha1.Cluster)
-	AppendCluster(prov *clusterv1alpha1.Cluster) error
+	AppendCluster(cluster *clusterv1alpha1.Cluster) error
 	UniqueClusterName(environment, name string) error
 	Provider(name string) (provider *tarmakv1alpha1.Provider, err error)
 	Providers() (providers []*tarmakv1alpha1.Provider)
@@ -140,6 +141,7 @@ type Config interface {
 	CurrentEnvironmentName() string
 	Contact() string
 	Project() string
+	AddAvailabilityZones(cluster *clusterv1alpha1.Cluster, zones []string)
 }
 
 type Packer interface {

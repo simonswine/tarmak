@@ -1,6 +1,55 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
+	"github.com/jetstack/tarmak/pkg/wing"
+)
+
+var flags = viper.New()
+
+var RootCmd = &cobra.Command{
+	Use:   "wing",
+	Short: "Wing is the agent that runs on every instance of tarmak",
+	Run: func(cmd *cobra.Command, args []string) {
+	},
+}
+
+func initMeshFlags(flagset *pflag.FlagSet, config *viper.Viper) {
+	keys, values, descriptions, err := wing.DefaultFlags()
+	if err != nil {
+		panic(err)
+	}
+	for pos, key := range keys {
+		switch v := values[pos].(type) {
+		case string:
+			flagset.String(key, v, descriptions[pos])
+		case int:
+			flagset.Int(key, v, descriptions[pos])
+		default:
+			panic(fmt.Sprintf("unknown type: %T", v))
+		}
+		config.BindPFlag(key, flagset.Lookup(key))
+	}
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+/*
+
+import (
 	"bufio"
 	"compress/gzip"
 	"fmt"
@@ -20,6 +69,7 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/spf13/cobra"
+	"github.com/weaveworks/mesh"
 )
 
 var cfgFile string
@@ -173,11 +223,5 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
+
+*/

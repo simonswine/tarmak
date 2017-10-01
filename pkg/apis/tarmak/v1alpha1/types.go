@@ -57,7 +57,10 @@ type ProviderAmazon struct {
 }
 
 type ProviderGCP struct {
-	Project string `json:"project,omitempty"`
+	Project      string `json:"project,omitempty"`
+	BucketPrefix string `json:"bucketPrefix,omitempty"`
+
+	PublicZone string `json:"publicZone,omitempty"`
 }
 
 type ProviderAzure struct {

@@ -5,6 +5,7 @@ import (
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
 	"github.com/jetstack/tarmak/pkg/tarmak/provider/amazon"
+	"github.com/jetstack/tarmak/pkg/tarmak/provider/google"
 	"github.com/jetstack/tarmak/pkg/tarmak/utils/input"
 )
 
@@ -38,7 +39,7 @@ func Init(init interfaces.Initialize) (provider *tarmakv1alpha1.Provider, err er
 
 providerloop:
 	for {
-		clouds := []string{clusterv1alpha1.CloudAmazon, clusterv1alpha1.CloudAzure}
+		clouds := []string{clusterv1alpha1.CloudAmazon, clusterv1alpha1.CloudAzure, clusterv1alpha1.CloudGoogle}
 		cloud, err := init.Input().AskSelection(&input.AskSelection{
 			Query:   "Select a cloud",
 			Choices: clouds,
@@ -51,6 +52,12 @@ providerloop:
 		switch clouds[cloud] {
 		case clusterv1alpha1.CloudAmazon:
 			err := amazon.Init(init.Input(), provider)
+			if err != nil {
+				return nil, err
+			}
+			break providerloop
+		case clusterv1alpha1.CloudGoogle:
+			err := google.Init(init.Input(), provider)
 			if err != nil {
 				return nil, err
 			}

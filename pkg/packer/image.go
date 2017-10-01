@@ -8,6 +8,7 @@ import (
 
 	logrus "github.com/Sirupsen/logrus"
 
+	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
 	tarmakDocker "github.com/jetstack/tarmak/pkg/docker"
 	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
@@ -43,11 +44,12 @@ func (i *image) Build() (amiID string, err error) {
 		c.Env = append(c.Env, fmt.Sprintf("%s=%s", strings.ToUpper(key), value))
 	}
 
-	// get aws secrets
-	if environmentProvider, err := i.tarmak.Cluster().Environment().Provider().Environment(); err != nil {
+	provider := i.tarmak.Cluster().Environment().Provider()
+	// get environment variables for provider
+	if env, err := provider.Environment(); err != nil {
 		return "", fmt.Errorf("error getting environment secrets from provider: %s", err)
 	} else {
-		c.Env = append(c.Env, environmentProvider...)
+		c.Env = append(c.Env, env...)
 	}
 
 	c.WorkingDir = "/packer"
@@ -89,6 +91,36 @@ func (i *image) Build() (amiID string, err error) {
 	err = c.Start()
 	if err != nil {
 		return "", fmt.Errorf("error starting container: %s", err)
+	}
+
+	// upload GCP credentials file to container
+	// TODO: include this in the packer build state
+	if provider.Cloud() == clusterv1alpha1.CloudGoogle {
+		p, err := i.tarmak.Config().Provider(provider.Name())
+		if err != nil {
+			return "", err
+		}
+		if p.GCP != nil {
+			if credFile := p.GCP.CredentialFile; credFile != "" {
+				creds, err := ioutil.ReadFile(credFile)
+				if err != nil {
+					return "", fmt.Errorf("error loading google provider credential file: %s", err.Error())
+				}
+
+				credTar, err := tarmakDocker.TarStreamFromFile(filepath.Base(credFile), string(creds))
+				if err != nil {
+					return "", err
+				}
+				_, err = c.Execute("mkdir", []string{"-p", filepath.Dir(credFile)})
+				if err != nil {
+					return "", err
+				}
+				err = c.UploadToContainer(credTar, filepath.Dir(credFile))
+				if err != nil {
+					return "", fmt.Errorf("error uploading google credentials to container: %s", err.Error())
+				}
+			}
+		}
 	}
 
 	returnCode, err := c.Execute("packer", []string{"build", buildPath})

@@ -189,10 +189,12 @@ func (g *Google) AZsForRegion(r string) ([]string, error) {
 
 // This will return necessary environment variables
 func (g *Google) Environment() ([]string, error) {
-	// TODO: correctly set credentials location
+	g.log.Infof("Google credentials path: %s", g.conf.GCP.CredentialFile)
 	return []string{
-		fmt.Sprintf("GOOGLE_CREDENTIALS=%s", ""),
+		fmt.Sprintf("GOOGLE_CREDENTIALS=%s", g.conf.GCP.CredentialFile),
 		fmt.Sprintf("GOOGLE_REGION=%s", g.Region()),
+		fmt.Sprintf("GOOGLE_DEFAULT_ZONE=%s", "europe-west1-b"),
+		fmt.Sprintf("GOOGLE_PROJECT_ID=%s", g.conf.GCP.Project),
 	}, nil
 }
 

@@ -23,4 +23,10 @@ const (
 	EnvironmentTypeSingle = "single" // an environment that contains exactly one cluster
 )
 
+const (
+	InstanceStateConverged  = "converged"
+	InstanceStateConverging = "converging"
+	InstanceStateError      = "error"
+)
+
 var KubernetesEpoch time.Time = time.Unix(1437436800, 0)

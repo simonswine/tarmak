@@ -12,7 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/apimachinery/pkg/runtime/serializer/protobuf"
 
 	clusterv1alpha1 "github.com/jetstack/tarmak/pkg/apis/cluster/v1alpha1"
 	tarmakv1alpha1 "github.com/jetstack/tarmak/pkg/apis/tarmak/v1alpha1"
@@ -86,17 +86,6 @@ func ApplyDefaults(src runtime.Object) error {
 }
 
 func (c *Config) writeYAML(config *tarmakv1alpha1.Config) error {
-	var encoder runtime.Encoder
-	mediaTypes := c.codecs.SupportedMediaTypes()
-	for _, info := range mediaTypes {
-		if info.MediaType == "application/yaml" {
-			encoder = info.Serializer
-			break
-		}
-	}
-	if encoder == nil {
-		return errors.New("unable to locate yaml encoder")
-	}
 	encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, c.scheme, c.scheme)
 	encoder = c.codecs.EncoderForVersion(encoder, tarmakv1alpha1.SchemeGroupVersion)
 

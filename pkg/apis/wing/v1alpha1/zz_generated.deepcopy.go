@@ -231,6 +231,16 @@ func (in *InstanceStatus) DeepCopy() *InstanceStatus {
 func (in *InstanceStatusManifest) DeepCopyInto(out *InstanceStatusManifest) {
 	*out = *in
 	in.LastUpdateTimestamp.DeepCopyInto(&out.LastUpdateTimestamp)
+	if in.Messages != nil {
+		in, out := &in.Messages, &out.Messages
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.ExitCodes != nil {
+		in, out := &in.ExitCodes, &out.ExitCodes
+		*out = make([]int, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

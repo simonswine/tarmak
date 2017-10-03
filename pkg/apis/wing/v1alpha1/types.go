@@ -39,9 +39,11 @@ type InstanceStatus struct {
 
 //  InstaceSpecManifest defines the state and hash of a run manifest
 type InstanceStatusManifest struct {
-	State               string      `json:"state,omitempty"`
-	Hash                string      `json:"hash,omitempty"`                // md5 hash of manifests
-	LastUpdateTimestamp metav1.Time `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
+	State               InstanceManifestState `json:"state,omitempty"`
+	Hash                string                `json:"hash,omitempty"`                // md5 hash of manifests
+	LastUpdateTimestamp metav1.Time           `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
+	Messages            []string              `json:"messages,omitempty"`            // contains output of the retries
+	ExitCodes           []int                 `json:"exitCodes,omitempty"`           // return code of the retries
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

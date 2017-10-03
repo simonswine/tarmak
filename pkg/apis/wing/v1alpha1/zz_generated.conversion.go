@@ -169,9 +169,11 @@ func Convert_wing_InstanceStatus_To_v1alpha1_InstanceStatus(in *wing.InstanceSta
 }
 
 func autoConvert_v1alpha1_InstanceStatusManifest_To_wing_InstanceStatusManifest(in *InstanceStatusManifest, out *wing.InstanceStatusManifest, s conversion.Scope) error {
-	out.State = in.State
+	out.State = wing.InstanceManifestState(in.State)
 	out.Hash = in.Hash
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
+	out.Messages = *(*[]string)(unsafe.Pointer(&in.Messages))
+	out.ExitCodes = *(*[]int)(unsafe.Pointer(&in.ExitCodes))
 	return nil
 }
 
@@ -181,9 +183,11 @@ func Convert_v1alpha1_InstanceStatusManifest_To_wing_InstanceStatusManifest(in *
 }
 
 func autoConvert_wing_InstanceStatusManifest_To_v1alpha1_InstanceStatusManifest(in *wing.InstanceStatusManifest, out *InstanceStatusManifest, s conversion.Scope) error {
-	out.State = in.State
+	out.State = InstanceManifestState(in.State)
 	out.Hash = in.Hash
 	out.LastUpdateTimestamp = in.LastUpdateTimestamp
+	out.Messages = *(*[]string)(unsafe.Pointer(&in.Messages))
+	out.ExitCodes = *(*[]int)(unsafe.Pointer(&in.ExitCodes))
 	return nil
 }
 

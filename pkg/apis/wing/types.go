@@ -20,28 +20,31 @@ type Instance struct {
 
 // InstanceSpec defines the desired state of Instance
 type InstanceSpec struct {
-	Converge *InstanceSpecManifest `json:"converge,omitempty"`
-	DryRun   *InstanceSpecManifest `json:"dryRun,omitempty"`
+	Converge *InstanceSpecManifest
+	DryRun   *InstanceSpecManifest
 }
 
 //  InstaceSpecManifest defines location and hash for a specific manifest
 type InstanceSpecManifest struct {
-	Path             string      `json:"path,omitempty"`             // PATH to manifests (tar.gz)
-	Hash             string      `json:"hash,omitempty"`             // md5 hash of manifests
-	RequestTimestamp metav1.Time `json:"requestTimestamp,omitempty"` // timestamp when a converge was requested
+	Path             string
+	Hash             string
+	RequestTimestamp metav1.Time
 }
 
 // InstanceStatus defines the observed state of Instance
 type InstanceStatus struct {
-	Converge *InstanceStatusManifest `json:"converge,omitempty"`
-	DryRun   *InstanceStatusManifest `json:"dryRun,omitempty"`
+	Converge *InstanceStatusManifest
+	DryRun   *InstanceStatusManifest
 }
 
 //  InstaceSpecManifest defines the state and hash of a run manifest
+type InstanceManifestState string
 type InstanceStatusManifest struct {
-	State               string      `json:"state,omitempty"`
-	Hash                string      `json:"hash,omitempty"`                // md5 hash of manifests
-	LastUpdateTimestamp metav1.Time `json:"lastUpdateTimestamp,omitempty"` // timestamp when a converge was requested
+	State               InstanceManifestState
+	Hash                string
+	LastUpdateTimestamp metav1.Time
+	Messages            []string
+	ExitCodes           []int
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

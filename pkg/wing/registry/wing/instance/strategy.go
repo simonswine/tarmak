@@ -2,6 +2,7 @@ package instance
 
 import (
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -51,12 +52,34 @@ func (instanceStrategy) NamespaceScoped() bool {
 	return true
 }
 
+func updateNullTimestampsToNow(obj runtime.Object) {
+	i := obj.(*wing.Instance)
+	if i != nil {
+		if i.Status != nil {
+			if i.Status.Converge != nil && i.Status.Converge.LastUpdateTimestamp.IsZero() {
+				i.Status.Converge.LastUpdateTimestamp.Time = time.Now()
+			}
+			if i.Status.DryRun != nil && i.Status.DryRun.LastUpdateTimestamp.IsZero() {
+				i.Status.DryRun.LastUpdateTimestamp.Time = time.Now()
+			}
+		}
+		if i.Spec != nil {
+			if i.Spec.Converge != nil && i.Spec.Converge.RequestTimestamp.IsZero() {
+				i.Spec.Converge.RequestTimestamp.Time = time.Now()
+			}
+			if i.Spec.DryRun != nil && i.Spec.DryRun.RequestTimestamp.IsZero() {
+				i.Spec.DryRun.RequestTimestamp.Time = time.Now()
+			}
+		}
+	}
+}
+
 func (instanceStrategy) PrepareForCreate(ctx genericapirequest.Context, obj runtime.Object) {
-	// TODO: update all none timestamp to now()
+	updateNullTimestampsToNow(obj)
 }
 
 func (instanceStrategy) PrepareForUpdate(ctx genericapirequest.Context, obj, old runtime.Object) {
-	// TODO: update all none timestamp to now()
+	updateNullTimestampsToNow(obj)
 }
 
 func (instanceStrategy) Validate(ctx genericapirequest.Context, obj runtime.Object) field.ErrorList {

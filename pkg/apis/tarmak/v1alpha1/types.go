@@ -110,32 +110,3 @@ type Image struct {
 	BaseImage string `json:"baseImage,omitempty"`
 	Location  string `json:"location,omitempty"`
 }
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type InstanceState struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	InstanceID   string `json:"instanceID,omitempty"`
-	InstancePool string `json:"instanceID,omitempty"`
-
-	Spec   *InstanceStateSpec   `json:"spec,omitempty"`
-	Status *InstanceStateStatus `json:"status,omitempty"`
-}
-
-type InstanceStateSpec struct {
-	ConvergeHash string `json:"convergeHash,omitempty"`
-	DryRunPath   string `json:"dryRunPath,omitempty"`
-	DryRunHash   string `json:"dryRunHash,omitempty"`
-}
-
-type InstanceStateStatus struct {
-	Converge *InstanceStateStatusManifest `json:"converge,omitempty"`
-	DryRun   *InstanceStateStatusManifest `json:"dryRun,omitempty"`
-}
-
-type InstanceStateStatusManifest struct {
-	State string `json:"state,omitempty"`
-	Hash  string `json:"hash,omitempty"`
-}

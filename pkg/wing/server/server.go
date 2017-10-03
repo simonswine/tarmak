@@ -27,6 +27,7 @@ import (
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
+	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
 )
 
@@ -34,6 +35,7 @@ const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
 
 type WingServerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
+	Admission          *genericoptions.AdmissionOptions
 
 	StdOut io.Writer
 	StdErr io.Writer
@@ -42,6 +44,7 @@ type WingServerOptions struct {
 func NewWingServerOptions(out, errOut io.Writer) *WingServerOptions {
 	o := &WingServerOptions{
 		RecommendedOptions: genericoptions.NewRecommendedOptions(defaultEtcdPathPrefix, apiserver.Scheme, apiserver.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion)),
+		Admission:          genericoptions.NewAdmissionOptions(),
 
 		StdOut: out,
 		StdErr: errOut,
@@ -72,10 +75,9 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 	}
 
 	flags := cmd.Flags()
-	//o.ServerRunOptions.AddUniversalFlags(flags)
 	o.RecommendedOptions.Etcd.AddFlags(flags)
 	o.RecommendedOptions.SecureServing.AddFlags(flags)
-	//o.Admission.AddFlags(flags)
+	o.Admission.AddFlags(flags)
 
 	return cmd
 }
@@ -83,6 +85,7 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 func (o *WingServerOptions) Validate(args []string) error {
 	errors := []error{}
 	errors = append(errors, o.RecommendedOptions.Validate()...)
+	errors = append(errors, o.Admission.Validate()...)
 	return utilerrors.NewAggregate(errors)
 }
 
@@ -91,6 +94,8 @@ func (o *WingServerOptions) Complete() error {
 }
 
 func (o WingServerOptions) Config() (*apiserver.Config, error) {
+	instaceinittime.Register(o.Admission.Plugins)
+
 	// TODO have a "real" external address
 	if err := o.RecommendedOptions.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{net.ParseIP("127.0.0.1")}); err != nil {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
@@ -103,39 +108,13 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err := o.RecommendedOptions.SecureServing.ApplyTo(serverConfig); err != nil {
 		return nil, err
 	}
-	/*
-		if err := o.ServerRunOptions.ApplyTo(serverConfig); err != nil {
-			return nil, err
-		}
-			if err := o.RecommendedOptions.Audit.ApplyTo(serverConfig); err != nil {
-				return nil, err
-			}
-
-			if err := o.RecommendedOptions.Authentication.ApplyTo(serverConfig); err != nil {
-				return nil, err
-			}
-
-
-
-			if err := o.RecommendedOptions.Features.ApplyTo(serverConfig); err != nil {
-				return nil, err
-			}
-	*/
+	if err := o.Admission.ApplyTo(serverConfig); err != nil {
+		return nil, err
+	}
 
 	config := &apiserver.Config{
 		GenericConfig: serverConfig,
 	}
-
-	/*config.GenericConfig.LoopbackClientConfig = &rest.Config{
-		Host: "127.0.0.1:9080",
-	}
-
-	config.GenericConfig.SecureServingInfo = &genericapiserver.SecureServingInfo{
-		BindAddress: "0.0.0.0:9080",
-	}
-
-	config.GenericConfig.ApplyClientCert(
-	*/
 
 	return config, nil
 }

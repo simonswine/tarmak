@@ -35,8 +35,6 @@ func (d *instanceInitTime) Admit(a admission.Attributes) error {
 		return errors.New("unexpected object time")
 	}
 
-	panic("lala")
-
 	if instance.Status != nil {
 		if instance.Status.Converge != nil && instance.Status.Converge.LastUpdateTimestamp.IsZero() {
 			instance.Status.Converge.LastUpdateTimestamp.Time = time.Now()

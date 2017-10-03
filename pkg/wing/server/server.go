@@ -28,7 +28,10 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
 	"github.com/jetstack/tarmak/pkg/wing/admission/plugin/instanceinittime"
+	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
 	"github.com/jetstack/tarmak/pkg/wing/apiserver"
+	clientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
+	informers "github.com/jetstack/tarmak/pkg/wing/informers/internalversion"
 )
 
 const defaultEtcdPathPrefix = "/registry/wing.tarmak.io"
@@ -108,7 +111,17 @@ func (o WingServerOptions) Config() (*apiserver.Config, error) {
 	if err := o.RecommendedOptions.SecureServing.ApplyTo(serverConfig); err != nil {
 		return nil, err
 	}
-	if err := o.Admission.ApplyTo(serverConfig); err != nil {
+
+	client, err := clientset.NewForConfig(serverConfig.LoopbackClientConfig)
+	if err != nil {
+		return nil, err
+	}
+	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)
+	admissionInitializer, err := winginitializer.New(informerFactory)
+	if err != nil {
+		return nil, err
+	}
+	if err := o.Admission.ApplyTo(serverConfig, admissionInitializer); err != nil {
 		return nil, err
 	}
 

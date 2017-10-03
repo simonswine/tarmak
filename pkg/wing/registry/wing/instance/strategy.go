@@ -52,9 +52,11 @@ func (instanceStrategy) NamespaceScoped() bool {
 }
 
 func (instanceStrategy) PrepareForCreate(ctx genericapirequest.Context, obj runtime.Object) {
+	// TODO: update all none timestamp to now()
 }
 
 func (instanceStrategy) PrepareForUpdate(ctx genericapirequest.Context, obj, old runtime.Object) {
+	// TODO: update all none timestamp to now()
 }
 
 func (instanceStrategy) Validate(ctx genericapirequest.Context, obj runtime.Object) field.ErrorList {

@@ -12,9 +12,7 @@ var flags = viper.New()
 
 var RootCmd = &cobra.Command{
 	Use:   "wing",
-	Short: "Wing is the agent that runs on every instance of tarmak",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
+	Short: "wing is the agent component for tarmak, it runs on every instance of tarmak",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

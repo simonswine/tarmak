@@ -26,7 +26,7 @@ type WingInterface interface {
 	InstancesGetter
 }
 
-// WingClient is used to interact with features provided by the wing group.
+// WingClient is used to interact with features provided by the wing.tarmak.io group.
 type WingClient struct {
 	restClient rest.Interface
 }
@@ -64,7 +64,7 @@ func New(c rest.Interface) *WingClient {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	g, err := scheme.Registry.Group("wing")
+	g, err := scheme.Registry.Group("wing.tarmak.io")
 	if err != nil {
 		return err
 	}

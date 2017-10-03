@@ -32,9 +32,9 @@ type FakeInstances struct {
 	ns   string
 }
 
-var instancesResource = schema.GroupVersionResource{Group: "wing", Version: "", Resource: "instances"}
+var instancesResource = schema.GroupVersionResource{Group: "wing.tarmak.io", Version: "", Resource: "instances"}
 
-var instancesKind = schema.GroupVersionKind{Group: "wing", Version: "", Kind: "Instance"}
+var instancesKind = schema.GroupVersionKind{Group: "wing.tarmak.io", Version: "", Kind: "Instance"}
 
 // Get takes name of the instance, and returns the corresponding instance object, and an error if there is any.
 func (c *FakeInstances) Get(name string, options v1.GetOptions) (result *wing.Instance, err error) {

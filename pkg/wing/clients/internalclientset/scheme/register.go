@@ -17,7 +17,7 @@ limitations under the License.
 package scheme
 
 import (
-	core "github.com/jetstack/tarmak/pkg/apis/wing/install"
+	wing "github.com/jetstack/tarmak/pkg/apis/wing/install"
 	announced "k8s.io/apimachinery/pkg/apimachinery/announced"
 	registered "k8s.io/apimachinery/pkg/apimachinery/registered"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,6 +41,6 @@ func init() {
 
 // Install registers the API group and adds types to a scheme
 func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *registered.APIRegistrationManager, scheme *runtime.Scheme) {
-	core.Install(groupFactoryRegistry, registry, scheme)
+	wing.Install(groupFactoryRegistry, registry, scheme)
 
 }

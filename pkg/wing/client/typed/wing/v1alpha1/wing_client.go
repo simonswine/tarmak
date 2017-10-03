@@ -28,7 +28,7 @@ type WingV1alpha1Interface interface {
 	InstancesGetter
 }
 
-// WingV1alpha1Client is used to interact with features provided by the wing group.
+// WingV1alpha1Client is used to interact with features provided by the wing.tarmak.io group.
 type WingV1alpha1Client struct {
 	restClient rest.Interface
 }

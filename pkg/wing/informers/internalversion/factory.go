@@ -20,8 +20,8 @@ package internalversion
 
 import (
 	internalclientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
-	core "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/core"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/internalinterfaces"
+	wing "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/wing"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -110,9 +110,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Core() core.Interface
+	Wing() wing.Interface
 }
 
-func (f *sharedInformerFactory) Core() core.Interface {
-	return core.New(f)
+func (f *sharedInformerFactory) Wing() wing.Interface {
+	return wing.New(f)
 }

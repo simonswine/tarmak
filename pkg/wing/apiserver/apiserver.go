@@ -30,7 +30,8 @@ import (
 	"github.com/jetstack/tarmak/pkg/apis/wing"
 	"github.com/jetstack/tarmak/pkg/apis/wing/install"
 	"github.com/jetstack/tarmak/pkg/apis/wing/v1alpha1"
-	informers "github.com/jetstack/tarmak/pkg/wing/informers/internalversion"
+	wingregistry "github.com/jetstack/tarmak/pkg/wing/registry"
+	instancestorage "github.com/jetstack/tarmak/pkg/wing/registry/wing/instance"
 )
 
 var (
@@ -60,8 +61,6 @@ func init() {
 
 type Config struct {
 	GenericConfig *genericapiserver.Config
-	// SharedInformerFactory provides shared informers for resources
-	SharedInformerFactory informers.SharedInformerFactory
 }
 
 // WingServer contains state for a Kubernetes cluster master/api server.
@@ -104,6 +103,7 @@ func (c completedConfig) New() (*WingServer, error) {
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(wing.GroupName, registry, Scheme, metav1.ParameterCodec, Codecs)
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 	v1alpha1storage := map[string]rest.Storage{}
+	v1alpha1storage["instances"] = wingregistry.RESTInPeace(instancestorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
 	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
 
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {

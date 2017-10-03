@@ -18,7 +18,7 @@ package internalclientset
 
 import (
 	glog "github.com/golang/glog"
-	coreinternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/core/internalversion"
+	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -26,19 +26,19 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	Core() coreinternalversion.CoreInterface
+	Wing() winginternalversion.WingInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	core *coreinternalversion.CoreClient
+	wing *winginternalversion.WingClient
 }
 
-// Core retrieves the CoreClient
-func (c *Clientset) Core() coreinternalversion.CoreInterface {
-	return c.core
+// Wing retrieves the WingClient
+func (c *Clientset) Wing() winginternalversion.WingInterface {
+	return c.wing
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -57,7 +57,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.core, err = coreinternalversion.NewForConfig(&configShallowCopy)
+	cs.wing, err = winginternalversion.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.core = coreinternalversion.NewForConfigOrDie(c)
+	cs.wing = winginternalversion.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -83,7 +83,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.core = coreinternalversion.New(c)
+	cs.wing = winginternalversion.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

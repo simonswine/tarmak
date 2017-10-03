@@ -18,8 +18,8 @@ package fake
 
 import (
 	clientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
-	coreinternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/core/internalversion"
-	fakecoreinternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/core/internalversion/fake"
+	winginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion"
+	fakewinginternalversion "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset/typed/wing/internalversion/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -60,7 +60,7 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// Core retrieves the CoreClient
-func (c *Clientset) Core() coreinternalversion.CoreInterface {
-	return &fakecoreinternalversion.FakeCore{Fake: &c.Fake}
+// Wing retrieves the WingClient
+func (c *Clientset) Wing() winginternalversion.WingInterface {
+	return &fakewinginternalversion.FakeWing{Fake: &c.Fake}
 }

@@ -20,7 +20,7 @@ package internalversion
 
 import (
 	wing "github.com/jetstack/tarmak/pkg/apis/wing"
-	internalclientset "github.com/jetstack/tarmak/pkg/wing/clients/wing/internalclientset"
+	internalclientset "github.com/jetstack/tarmak/pkg/wing/clients/internalclientset"
 	internalinterfaces "github.com/jetstack/tarmak/pkg/wing/informers/internalversion/internalinterfaces"
 	internalversion "github.com/jetstack/tarmak/pkg/wing/listers/wing/internalversion"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

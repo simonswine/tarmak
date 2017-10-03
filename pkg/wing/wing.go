@@ -61,9 +61,6 @@ func (w *Wing) Run(args []string) error {
 
 	// Wait forever
 	select {}
-
-	return nil
-
 }
 
 func (w *Wing) Must(err error) *Wing {

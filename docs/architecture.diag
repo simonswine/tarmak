@@ -1,0 +1,29 @@
+digraph G {
+    init [label="tarmak init", shape=box];
+    init -> ty[label="create config"];
+    ty[label="~/.tarmak/tarmak.yaml"];
+
+    cib [label="tarmak cluster images build", shape=box];
+    cib -> ti [label="create Terraform image"];
+
+    ti [label="Docker image\n containing Terraform"];
+
+    ca [label="tarmak cluster apply", shape=box];
+    ca -> tc[label="run Terraform in a container"];
+    tc [label="terraform apply"];
+
+    tc -> server1[label="aws ec2 create server1"]
+    tc -> server2[style=dotted]
+    tc -> server3[style=dotted]
+    server3[label="server[x]"]
+
+    server1 -> w [label="systemd service"]
+    w[label="puppet agent\n (wing)"]
+
+    w -> vault[label="systemd service"]
+    w -> etcd
+    w -> kubelet
+
+    init -> cib [style=dotted];
+    cib -> ca [style=dotted];
+}

@@ -135,47 +135,23 @@ Usage::
 ``apply``
 *********
 
-Apply changes to cluster (apply infrastructure changes only).
+Apply changes to a cluster (by default applies infrastructure (Terraform) and configuration (Puppet) changes.
 
 Usage::
 
   $ tarmak clusters apply
 
-``plan``
-********
+Flags::
 
-Dry run apply.
+  --infrastructure-stacks [state,network,tools,vault,kubernetes]
+      target exactlyone piece of the infrastructure (aka terraform stack). This implies (--infrastructure-only) 
+  --infrastructure-only   [default=false]
+      only apply infrastructure (aka terraform)
+  --configuration-only    [default=false]
+      only apply configuration  (aka puppet)
+  --dry-run               [default=false]
+      show changes only, do not actually execute them
 
-Usage::
-
-  $ tarmak clusters plan
-
-``XX``
-******
-
-Does not run any infrastructure changes. Reconfigure based on configuration changes.
-
-Usage::
-
-  $ tarmak clusters XX
-
-``YY``
-******
-
-Reconfigure based on infrastructure+configuration changes.
-
-Usage::
-
-  $ tarmak clusters YY
-
-``YY-rolling-update``
-*********************
-
-YY with rolling update.
-
-Usage::
-
-  $ tarmak clusters YY-rolling-update
 
 ``instances [ list | ssh ]``
 ****************************
@@ -277,15 +253,16 @@ Provider (many) -> Environment (one)
 
 Environment (many) -> Cluster (one)
 
+
 Changed Names
 #############
 
-+-----------+-------------+
-| Old Name  | New Name    |
-+===========+=============+
-| NodeGroup | Server Pool |
-+-----------+-------------+
-| Context   | Cluster     |
-+-----------+-------------+
-|  Nodes    | Instances   |
-+-----------+-------------+
++----------------------+--------------+
+| Old Name             | New Name     |
++======================+==============+
+| NodeGroup/ServerPool | InstancePool |
++----------------------+--------------+
+| Context              | Cluster      |
++----------------------+--------------+
+|  Nodes               | Instances    |
++----------------------+--------------+

@@ -62,11 +62,11 @@ Note that if you are not using Vault's AWS secret backend you can authenticate w
 
 By default the configuration will be created at $HOME/.tarmak/tarmak.yaml. 
 
-Now we create an image for our environment by running `tarmak image-build` (this is the step that requires docker to be installed locally).
+Now we create an image for our environment by running `tarmak clusters images build` (this is the step that requires docker to be installed locally).
 
 ::
 
-  % tarmak image-build 
+  % tarmak clusters images build
   <long output omitted>
 
 We can now apply our configuration to AWS by running `tarmak terraform-apply`. Note that the first time you run this command Tarmak will create a `hosted zone <http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html>`_ for you and then fail with the following error. 

@@ -4,12 +4,15 @@ digraph G {
     ty[label="~/.tarmak/tarmak.yaml"];
 
     cib [label="tarmak cluster images build", shape=box];
-    cib -> ti [label="create Terraform image"];
 
-    ti [label="Docker image\n containing Terraform"];
+    cib-> ami[label="packer create AMI image"]
+    ami[label="Centos AMI image\n (including security updates\n and essential cluster tools)"]
 
     ca [label="tarmak cluster apply", shape=box];
-    ca -> tc[label="run Terraform in a container"];
+    ca -> ti [label="create Terraform image"];
+    ti [label="Docker image\n containing Terraform"];
+
+    ti -> tc[label="run Terraform in a container"];
     tc [label="terraform apply"];
 
     tc -> server1[label="aws ec2 create server1"]

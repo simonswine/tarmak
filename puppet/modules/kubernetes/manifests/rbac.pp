@@ -14,4 +14,14 @@ class kubernetes::rbac{
       ],
     }
   }
+
+  # This is hotfix for enabling k8s 1.8 without node authorizer
+  $authorization_mode = $kubernetes::_authorization_mode
+  if member($authorization_mode, 'RBAC') and versioncmp($::kubernetes::version, '1.8.0') < 0 {
+    kubernetes::apply{'puppernetes-rbac':
+      manifests => [
+        template('kubernetes/rbac-node-cluster-role-bindings.yaml.erb'),
+      ],
+    }
+  }
 }

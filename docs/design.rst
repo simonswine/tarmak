@@ -45,21 +45,24 @@ Architecture
 The architecture how clusters are build follows a couple of concepts that
 turned out to be beneficial to operate Kubernetes clusters
 
-Namespaces & Clusters & Hub
+Environments & Clusters & Hub
 ***************************
 
-A namespace can contain one or more kubernetes clusters. Every namespace
+A environment can contain one or more kubernetes clusters. Every environment
 contains exactly one bastion node and one vault cluster. In a multi-cluster
 namespace these bastion and vault instances are run in an separate cluster
 called  `hub`.
 
-For a single node namespace, there's always exactly one cluster. This cluster contains all the server pool for the types:
+For a single node namespace, there's always exactly one cluster. This cluster
+contains all the server pool for the types:
 
-* etcd: Stateful instances with etcd key-value store backing Kubernetes and possible overlay networks
+* etcd: Stateful instances with etcd key-value store backing Kubernetes and
+  possible overlay networks
 * master: Stateless Kubernetes master instances
 * node: Stateless Kubernetes node (aka worker) instances
 * vault: Stateful vault instances, that contain the clusters PKI
-* bastion: Bastion instance with public IP address to reach all other nodes, that don't have public IP space assigned
+* bastion: Bastion instance with public IP address to reach all other nodes,
+  that don't have public IP space assigned
 
 Server Pools
 ************

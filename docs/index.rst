@@ -17,7 +17,7 @@ build and deploy Kubernetes in production at scale.
 .. toctree::
    :maxdepth: 2
 
-   design
+   introduction
    user-guide
    design_cli_ux
    developer-guide

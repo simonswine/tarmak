@@ -18,6 +18,6 @@ build and deploy Kubernetes in production at scale.
    :maxdepth: 2
 
    design
-   getting-started
+   user-guide
    design_cli_ux
    developer-guide

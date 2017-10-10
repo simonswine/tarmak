@@ -25,6 +25,7 @@ Overview of steps to follow
 * :ref:`Build an image (AMI) <create_ami>`
 * :ref:`Create the cluster <create_cluster>`
 * :ref:`Use the cluster <use_cluster>`
+* :ref:`Monitor the cluster <monitor_cluster>`
 * :ref:`Destroy the cluster <destroy_cluster>`
 
 .. _init_config:
@@ -128,7 +129,7 @@ You can then find out the port that is allocated for the Sock Shop front-end ser
 
   You should be able to connect to the Sock Shop front end on port 30001 of the ingress IP that Tarmak has set up.
 
-  Visit http://sockshop.cluster.richardw.dev.tarmak.org:30001/ in your web browser.
+  Visit http://sockshop.cluster.<your_public_domain>:30001/ in your web browser.
 
 OR
 
@@ -136,6 +137,15 @@ Create an SSH tunnel to the Sock Shop node port on the Kubernetes master node::
   % tarmak clusters ssh -L30001:master:30001 bastion
 
 Then visit http://localhost:30001 in your web browser.
+
+
+.. _monitor_cluster
+
+Monitor the cluster
+~~~~~~~~~~~~~~~~~~~
+
+Visit http://monitoring.cluster.<your_public_domain> to view the Prometheus dashboard.
+
 
 .. _destroy_cluster:
 

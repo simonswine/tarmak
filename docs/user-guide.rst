@@ -6,8 +6,8 @@ User guide
 Getting started with AWS
 ------------------------
 
-In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster. 
-This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address 
+In this getting started guide, we walk through how to use initialise Tarmak with a new Provider (AWS) and Environment and provision a Kubernetes cluster.
+This will comprise Kubernetes master and worker nodes, etcd clusters, Vault and a bastion node with a public IP address
 (see :ref:`Architecture overview <architecture_overview>` for details of cluster components)
 
 Prerequisites
@@ -24,6 +24,7 @@ Overview of steps to follow
 * :ref:`Initialise cluster configuration <init_config>`
 * :ref:`Build an image (AMI) <create_ami>`
 * :ref:`Create the cluster <create_cluster>`
+* :ref:`Use the cluster <use_cluster>`
 * :ref:`Destroy the cluster <destroy_cluster>`
 
 .. _init_config:
@@ -31,8 +32,8 @@ Overview of steps to follow
 Initialise configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration 
-to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes 
+Simply run ``tarmak init`` to initialise configuration for the first time. You will be prompted for the necessary configuration
+to set-up a new :ref:`Provider <providers_resource>` (AWS) and :ref:`Environment <environments_resource>`. The list below describes
 the questions you will be asked.
 
 .. note::
@@ -96,6 +97,45 @@ To complete the cluster provisioning, run ``tarmak clusters apply`` once again.
    Tarmak will not exit immediately.
    It will wait for the currently running step to finish and then exit.
    You can complete the process by re-running the command.
+
+.. _use_cluster:
+
+Use the cluster
+~~~~~~~~~~~~~~~
+
+Now it is time to take your new cluster for a test drive.
+We'll deploy `Sock Shop`_, a sample microservices application that shows how to run and connect a set of services on Kubernetes.
+
+Tarmak provides a convenient ``kubectl`` wrapper which automatically connects to the current Tarmak cluster.
+We'll use this instead of running ``kubectl`` directly.
+
+Create a namespace and then deploy the application::
+
+  % tarmak clusters kubectl create namespace sock-shop
+  <output omitted>
+
+  % tarmak clusters kubectl apply -n sock-shop -f "https://github.com/microservices-demo/microservices-demo/blob/master/deploy/kubernetes/complete-demo.yaml?raw=true"
+  <output omitted>
+
+It takes several minutes to download and start all the containers, watch the output of ``tarmak clusters kubectl get pods -n sock-shop`` to see when they’re all up and running.
+
+You can then find out the port that is allocated for the Sock Shop front-end service by running::
+
+  % tarmak clusters kubectl -n sock-shop get svc front-end
+
+  NAME        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+  front-end   10.254.176.100   <nodes>       80:30001/TCP   21m
+
+  You should be able to connect to the Sock Shop front end on port 30001 of the ingress IP that Tarmak has set up.
+
+  Visit http://sockshop.cluster.richardw.dev.tarmak.org:30001/ in your web browser.
+
+OR
+
+Create an SSH tunnel to the Sock Shop node port on the Kubernetes master node::
+  % tarmak clusters ssh -L30001:master:30001 bastion
+
+Then visit http://localhost:30001 in your web browser.
 
 .. _destroy_cluster:
 

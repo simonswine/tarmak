@@ -191,6 +191,10 @@ func (t *Tarmak) Clusters() (clusters []interfaces.Cluster) {
 	return clusters
 }
 
+func (t *Tarmak) Kubectl() interfaces.Kubectl {
+	return t.kubectl
+}
+
 // this builds a temporary directory with the needed assets that are built into the go binary
 func (t *Tarmak) RootPath() (string, error) {
 	if t.rootPath != nil {

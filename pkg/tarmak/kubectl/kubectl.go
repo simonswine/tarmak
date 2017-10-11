@@ -136,7 +136,7 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	return nil
 }
 
-func (k *Kubectl) ensureConfig() error {
+func (k *Kubectl) EnsureConfig() error {
 	c := api.NewConfig()
 	configPath := k.ConfigPath()
 
@@ -263,7 +263,7 @@ func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
 }
 
 func (k *Kubectl) Kubectl(args []string) error {
-	if err := k.ensureConfig(); err != nil {
+	if err := k.EnsureConfig(); err != nil {
 		return err
 	}
 

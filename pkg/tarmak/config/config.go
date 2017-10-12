@@ -286,6 +286,10 @@ func (c *Config) configPath() string {
 func (c *Config) ReadConfig() (*tarmakv1alpha1.Config, error) {
 	path := c.configPath()
 
+	if _, err := os.Stat(path); err != nil {
+		return nil, err
+	}
+
 	configBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err

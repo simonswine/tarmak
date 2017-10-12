@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/hashicorp/go-multierror"
@@ -84,11 +83,13 @@ func New(flags *tarmakv1alpha1.Flags) *Tarmak {
 	if err != nil {
 
 		// TODO: This whole construct is really ugly, make this better soon
-		if strings.Contains(err.Error(), "no such file or directory") {
-			if flags.Initialize {
-				return t
-			}
+		if flags.Initialize {
+			return t
+		}
+		if os.IsNotExist(err) {
 			t.log.Fatal("unable to find an existing config, run 'tarmak init'")
+		} else {
+			t.log.Fatal("unable to read the existing config file: ", err)
 		}
 
 	}

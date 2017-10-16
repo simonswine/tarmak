@@ -1,66 +1,95 @@
-# vendor in code gen tools
-required = [
-  "k8s.io/code-generator/cmd/client-gen",
-  "k8s.io/code-generator/cmd/conversion-gen",
-  "k8s.io/code-generator/cmd/deepcopy-gen",
-  "k8s.io/code-generator/cmd/defaulter-gen",
-  "k8s.io/code-generator/cmd/informer-gen",
-  "k8s.io/code-generator/cmd/lister-gen",
-  "github.com/golang/mock/mockgen",
-  "github.com/jteeuwen/go-bindata/go-bindata",
-]
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+
+[[constraint]]
+  name = "github.com/Azure/go-autorest"
+  version = "8.0.0"
+
+[[constraint]]
+  name = "github.com/coreos/go-oidc"
+
+[[constraint]]
+  name = "github.com/emicklei/go-restful-swagger12"
+  version = "1.0.1"
+
+[[constraint]]
+  name = "github.com/ghodss/yaml"
+
+[[constraint]]
+  name = "github.com/gogo/protobuf"
+
+[[constraint]]
+  name = "github.com/golang/glog"
+
+[[constraint]]
+  name = "github.com/golang/groupcache"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+
+[[constraint]]
+  name = "github.com/google/gofuzz"
+
+[[constraint]]
+  name = "github.com/googleapis/gnostic"
+
+[[constraint]]
+  name = "github.com/gophercloud/gophercloud"
+
+[[constraint]]
+  name = "github.com/gregjones/httpcache"
 
 [[constraint]]
   branch = "master"
-  name = "github.com/fsouza/go-dockerclient"
+  name = "github.com/howeyc/gopass"
+
+[[constraint]]
+  name = "github.com/imdario/mergo"
 
 [[constraint]]
   branch = "master"
-  name = "github.com/hashicorp/go-multierror"
+  name = "github.com/juju/ratelimit"
 
 [[constraint]]
-  name = "github.com/sirupsen/logrus"
-  version = "1.0.0"
+  name = "github.com/peterbourgon/diskv"
+  version = "2.0.1"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/spf13/cobra"
+  name = "github.com/spf13/pflag"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/spf13/viper"
+  name = "github.com/stretchr/testify"
 
 [[constraint]]
-  branch = "v2"
-  name = "gopkg.in/yaml.v2"
+  name = "golang.org/x/net"
 
 [[constraint]]
-  branch = "master"
-  name = "k8s.io/client-go"
+  name = "golang.org/x/oauth2"
 
 [[constraint]]
-  branch = "master"
-  name = "k8s.io/apiserver"
+  branch = "release-1.8"
+  name = "k8s.io/api"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/grpc-ecosystem/go-grpc-prometheus"
-
-[[constraint]]
-  name = "github.com/jteeuwen/go-bindata"
-  revision = "a0ff2567cfb70903282db057e799fd826784d41d"
-
-# TODO: Update once changes are released
-[[constraint]]
-  name = "github.com/jetstack-experimental/vault-unsealer"
-  revision = "cea1258b2833b938e168e86dffaa980bd89f74c3"
-
-# TODO: Update once changes are released
-[[constraint]]
-  name = "github.com/jetstack-experimental/vault-helper"
-  revision = "f7506c9c9ab6cb68dfbb3be12161cae30336875c"
-
-[[override]]
-  name = "google.golang.org/grpc"
-  version = "=1.2.1"
-
+  branch = "release-1.8"
+  name = "k8s.io/apimachinery"

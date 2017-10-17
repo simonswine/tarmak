@@ -25,4 +25,5 @@ build and deploy Kubernetes in production at scale.
    user-guide
    design_cli_ux
    developer-guide
+   proposals
    known-issues

@@ -3,6 +3,9 @@ go:
   - 1.9
 install:
   - make depend
+  - virtualenv venv
+  - source venv/bin/activate && pip install -r docs/requirements.txt
 script:
   - make verify build
-
+  - source venv/bin/activate && make -C docs html
+  - source venv/bin/activate && make -C docs spelling

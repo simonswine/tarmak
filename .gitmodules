@@ -4,9 +4,6 @@
 [submodule "puppet/modules/puppet-module-kubernetes"]
 	path = puppet/modules/kubernetes
 	url = https://github.com/jetstack/puppet-module-kubernetes.git
-[submodule "puppet/modules/puppet-module-kubernetes_addons"]
-	path = puppet/modules/kubernetes_addons/
-	url = https://github.com/jetstack/puppet-module-kubernetes_addons.git
 [submodule "puppet/modules/puppet-module-prometheus"]
 	path = puppet/modules/prometheus
 	url = https://github.com/jetstack/puppet-module-prometheus.git
@@ -22,3 +19,6 @@
 [submodule "puppet/modules/puppet-module-calico"]
 	path = puppet/modules/calico
 	url = https://github.com/jetstack/puppet-module-calico.git
+[submodule "puppet/modules/kubernetes_addons"]
+	path = puppet/modules/kubernetes_addons
+	url = https://github.com/jetstack/puppet-module-kubernetes_addons.git

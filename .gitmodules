@@ -1,3 +1,6 @@
 [submodule "puppet/modules/puppet-module-etcd"]
 	path = puppet/modules/etcd
 	url = https://github.com/jetstack/puppet-module-etcd.git
+[submodule "puppet/modules/puppet-module-kubernetes"]
+	path = puppet/modules/kubernetes
+	url = https://github.com/jetstack/puppet-module-kubernetes.git

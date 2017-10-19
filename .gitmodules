@@ -13,3 +13,6 @@
 [submodule "puppet/modules/puppet-module-aws_ebs"]
 	path = puppet/modules/aws_ebs
 	url = https://github.com/jetstack/puppet-module-aws_ebs.git
+[submodule "puppet/modules/puppet-module-tarmak"]
+	path = puppet/modules/tarmak
+	url = https://github.com/jetstack/puppet-module-tarmak.git

@@ -7,3 +7,6 @@
 [submodule "puppet/modules/puppet-module-kubernetes_addons"]
 	path = puppet/modules/kubernetes_addons/
 	url = https://github.com/jetstack/puppet-module-kubernetes_addons.git
+[submodule "puppet/modules/puppet-module-prometheus"]
+	path = puppet/modules/prometheus
+	url = https://github.com/jetstack/puppet-module-prometheus.git

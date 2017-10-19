@@ -4,3 +4,6 @@
 [submodule "puppet/modules/puppet-module-kubernetes"]
 	path = puppet/modules/kubernetes
 	url = https://github.com/jetstack/puppet-module-kubernetes.git
+[submodule "puppet/modules/puppet-module-kubernetes_addons"]
+	path = puppet/modules/kubernetes_addons/
+	url = https://github.com/jetstack/puppet-module-kubernetes_addons.git

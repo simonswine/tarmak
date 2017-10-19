@@ -19,3 +19,6 @@
 [submodule "puppet/modules/puppet-module-vault_client"]
 	path = puppet/modules/vault_client
 	url = https://github.com/jetstack/puppet-module-vault_client.git
+[submodule "puppet/modules/puppet-module-calico"]
+	path = puppet/modules/calico
+	url = https://github.com/jetstack/puppet-module-calico.git

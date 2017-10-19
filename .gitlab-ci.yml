@@ -1,3 +1,6 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 .test::puppet_module: &test_puppet_module
   stage: test
   tags:

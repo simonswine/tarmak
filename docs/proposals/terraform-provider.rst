@@ -12,14 +12,14 @@ Background
 
 Right now the Terraform code for the AWS provider (the only one implemented)
 consists of multiple separate stacks (state, network, tools, vault,
-kubernetes). Main reason for having these stacks is to enable Tarmak to do
+kubernetes). The Main reason for having these stacks is to enable Tarmak to do
 operations in between parts of the resource spin up. Examples for such
 operations are (*list might not be complete*):
 
-- Bastion node needs to be up for other instances to check into Wing
+- Bastion node needs to be up for other instances to check into Wing.
 - Vault needs to be up and initialised, before PKI resources are created.
 - Vault needs to contain a cluster's PKI resources, before Kubernetes instances
-  can be created (``init-tokens``)
+  can be created (``init-tokens``).
 
 The separation of stacks comes with some overhead for preparing Terraform apply
 (pull state, lock stack, plan run, apply run). Terraform can't make use of
@@ -32,7 +32,8 @@ Objective
 An integration of these stacks into a single stack could lead to a substantial
 reduction of execution time.
 
-As Terraform is running in a container is quite isolated from the Tarmak process
+As Terraform is running in a container is quite isolated from the Tarmak
+process:
 
 * Requires some Terraform refactoring
 * Should be done before implementing multiple providers
@@ -131,23 +132,23 @@ This provides a secure and platform-independent channel between Tarmak and
        stdIN/OUT -- exec into  ---- <<exec tarmak-connector>>
 
 
-The protocol on that channel, should be using Golang's `net/rpc
-<https://golang.org/pkg/net/rpc/>`_
+The protocol on that channel should be using Golang's `net/rpc
+<https://golang.org/pkg/net/rpc/>`_.
 
 Initial proof-of-concept
 ************************
 
 An initial `proof-of-concept
 <https://gitlab.jetstack.net/christian.simon/terraform-provider-tarmak/tree/master>`_
-has been explored to test how the Terraform plugin model looks like. Although
-it's not really having anything implemented at this point, it might serve as a
+has been explored to test what the Terraform model looks like. Although it's
+not really having anything implemented at this point, it might serve as a
 starting point.
 
 Out of scope
 ------------
 
-This proposal is not suggesting that we migrating features that are currently
+This proposal is not suggesting that we migrate features that are currently
 done by the Tarmak main process. The reason for that is that we don't want
-Terraform to become involved in the configuration provisioning of e..g the
-vault cluster. This proposal should only improve the control we have from
+Terraform to become involved in the configuration provisioning of e.g. the
+Vault cluster. This proposal should only improve the control we have from
 Tarmak over things that happen in Terraform.

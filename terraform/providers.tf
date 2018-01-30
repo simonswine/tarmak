@@ -2,6 +2,9 @@ provider "aws" {
   version = "~> 1.0"
 }
 
+provider "awstag" {
+}
+
 provider "template" {
   version = "~> 1.0"
 }

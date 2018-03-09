@@ -338,6 +338,11 @@ func (tc *TerraformContainer) prepare() error {
 		return fmt.Errorf("error starting container: %s", err)
 	}
 
+	err = tc.ListenRPC(tc.t.tarmak, tc.stack)
+	if err != nil {
+		return fmt.Errorf("error starting container: %s", err)
+	}
+
 	return nil
 }
 
@@ -352,17 +357,4 @@ func (tc *TerraformContainer) GenerateAWSSecurityGroup() (rules map[string][]*am
 	}
 
 	return rules, nil
-}
-
-func (tc *TerraformContainer) StartConnector() (err error) {
-	returnCode, err := tc.Execute("./tarmak-connector", []string{"start"})
-	if err != nil {
-		return err
-	}
-
-	if returnCode != 0 {
-		return fmt.Errorf("tarmak connector returned non 0 error code: %d", returnCode)
-	}
-
-	return nil
 }

@@ -75,6 +75,12 @@ resource "aws_instance" "bastion" {
   user_data = "${data.template_file.bastion_user_data.rendered}"
 }
 
+resource "tarmak_bastion_instance" {
+  username = "centos"
+  ip = "${aws_eip.bastion.public_ip}"
+  depend_on = ["${aws_instance.bastion}"]
+}
+
 resource "aws_route53_record" "bastion" {
   zone_id = "${data.terraform_remote_state.state.public_zone_id}"
   name    = "bastion.${var.environment}"

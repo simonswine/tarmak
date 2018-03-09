@@ -12,10 +12,6 @@ var providerTarmakCmd = &cobra.Command{
 	Use:   "provider-tarmak",
 	Short: "launch terraform-provider-tarmak",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := tarmak.StartClient(); err != nil {
-			panic(err)
-		}
-
 		plugin.Serve(&plugin.ServeOpts{
 			ProviderFunc: tarmak.Provider,
 		})

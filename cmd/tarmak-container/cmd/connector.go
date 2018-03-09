@@ -2,11 +2,10 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/jetstack/tarmak/pkg/connector"
+	"github.com/jetstack/tarmak/pkg/tarmak/connector"
+	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 )
 
 var connectorCmd = &cobra.Command{
@@ -14,12 +13,13 @@ var connectorCmd = &cobra.Command{
 	Short: "Launch tarmak connector",
 	Long:  "Launch tarmak connector",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		connector := connector.NewConnector(newLogger())
+		p := connector.NewProxy(rpc.ConnectorSocket)
 
-		if err := connector.StartConnector(); err != nil {
-			return fmt.Errorf("connector failed: %v", err)
+		err := p.Start()
+		if err != nil {
+			return err
 		}
-
+		<-p.Done
 		return nil
 	},
 }

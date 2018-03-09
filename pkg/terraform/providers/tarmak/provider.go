@@ -12,5 +12,10 @@ func Provider() terraform.ResourceProvider {
 	// TODO: Move the configuration to this, requires validation
 
 	// The actual provider
-	return &schema.Provider{}
+	return &schema.Provider{
+		DataSourcesMap: map[string]*schema.Resource{
+			"tarmak_bastion_instance": dataSourceBastionInstance(),
+		},
+	}
+
 }

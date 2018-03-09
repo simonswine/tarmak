@@ -73,6 +73,8 @@ func (k *Kubectl) requestNewAdminCert(cluster *api.Cluster, authInfo *api.AuthIn
 	v := vaultTunnel.VaultClient()
 	v.SetToken(vaultRootToken)
 
+	k.log.Infof("vaultTunnel started", path)
+
 	// generate new RSA key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -217,6 +219,8 @@ func (k *Kubectl) ensureConfig() error {
 			break
 		} else if strings.Contains(err.Error(), "certificate signed by unknown authority") {
 			// TODO: this not really clean, if CA mismatched request new certificate
+			k.log.Warnf("error connecting to cluster: %s", err)
+			break
 			if err := k.requestNewAdminCert(cluster, authInfo); err != nil {
 				return err
 			}
@@ -249,6 +253,7 @@ func (k *Kubectl) verifyAPIVersion(c api.Config) (version string, err error) {
 	if err != nil {
 		return "", err
 	}
+	restConfig.TLSClientConfig.ServerName = "api.csire-cluster.tarmak.local"
 
 	// test connectivity
 	clientset, err := kubernetes.NewForConfig(restConfig)

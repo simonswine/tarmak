@@ -9,6 +9,8 @@ import (
 	"os"
 
 	"github.com/fsouza/go-dockerclient"
+	"github.com/jetstack/tarmak/pkg/tarmak/interfaces"
+	"github.com/jetstack/tarmak/pkg/terraform/providers/tarmak/rpc"
 	logrus "github.com/sirupsen/logrus"
 )
 
@@ -197,4 +199,51 @@ func (ac *AppContainer) Capture(cmd string, args []string) (stdOut string, stdEr
 
 func (ac *AppContainer) Start() error {
 	return ac.app.dockerClient.StartContainer(ac.dockerContainer.ID, &docker.HostConfig{})
+}
+
+// launch tarmak connector and attach an RPC server to it
+func (ac *AppContainer) ListenRPC(tarmak interfaces.Tarmak, stack interfaces.Stack) (err error) {
+
+	// create exec
+	exec, err := ac.app.dockerClient.CreateExec(docker.CreateExecOptions{
+		Cmd:          []string{"tarmak-connector"},
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    ac.dockerContainer.ID,
+		Tty:          false,
+	})
+	if err != nil {
+		return err
+	}
+
+	containerR, rpcW := io.Pipe()
+	rpcR, containerW := io.Pipe()
+
+	var containerErr bytes.Buffer
+	containerErrW := bufio.NewWriter(&containerErr)
+
+	err = ac.app.dockerClient.StartExec(exec.ID, docker.StartExecOptions{
+		InputStream:  containerR,
+		ErrorStream:  containerErrW,
+		OutputStream: containerW,
+		Tty:          false,
+		RawTerminal:  false,
+		Detach:       true,
+	})
+	if err != nil {
+		return fmt.Errorf("error starting exec: %s %s", err, containerErr.String())
+	}
+
+	rpc.Bind(tarmak, rpcR, rpcW, &execCloser{})
+
+	return nil
+}
+
+type execCloser struct {
+}
+
+func (c *execCloser) Close() error {
+	// TODO: kill tarmak connector
+	return nil
 }

@@ -22,6 +22,7 @@
       },
       "instance_type": "c4.xlarge",
       "ssh_username": "centos",
+      "encrypt_boot": "true",
       "ssh_pty": "true",
       "ami_name": "Tarmak CentOS 7 x86_64 with puppet-agent {{isotime \"2006-01-02_030405\"}}",
       "tags": {

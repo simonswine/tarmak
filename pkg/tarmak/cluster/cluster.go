@@ -847,6 +847,14 @@ func (c *Cluster) PublicAPIHostname() string {
 	)
 }
 
+// retrieve Amazons EBS encryption status
+func (c *Cluster) AmazonEBSEncryption() bool {
+	if c.Config().Amazon != nil && c.Config().Amazon.EBSEncrypted != nil && *c.Config().Amazon.EBSEncrypted {
+		return true
+	}
+	return false
+}
+
 func (c *Cluster) validateSubnets() error {
 	var result *multierror.Error
 

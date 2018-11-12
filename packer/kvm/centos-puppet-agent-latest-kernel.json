@@ -1,0 +1,49 @@
+{
+  "variables": {
+    "ebs_volume_encrypted": "{{env `EBS_VOLUME_ENCRYPTED`}}"
+  },
+  "builders": [
+    {
+      "type": "qemu",
+      "disk_image": "true",
+      "iso_checksum": "42c062df8a8c36991ec0282009dd52ac488461a3f7ee114fc21a765bfc2671c2",
+      "iso_checksum_type": "sha256",
+      "iso_url": "https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1809.qcow2",
+      "ssh_username": "centos",
+      "ssh_pty": "true",
+      "qemuargs": [ "-serial", "file:serial.out" ],
+      "boot_command":
+      [
+        "",
+        " append console=ttyS0,115200n8 cloud-init=disabled",
+        ""
+      ],
+      "disk_size": 16384,
+      "format": "qcow2",
+      "headless": true,
+      "accelerator": "kvm"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm",
+        "yum update -y",
+        "yum install -y epel-release",
+        "yum install -y git puppet-agent vim tmux socat python-pip at jq unzip awscli",
+        "rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org",
+        "rpm -ivh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm",
+        "yum --enablerepo=elrepo-kernel install -y kernel-ml",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/sysconfig/grub",
+        "sed -i '/GRUB_CMDLINE_LINUX=/c\\GRUB_CMDLINE_LINUX=\"console=tty0 crashkernel=0 console=ttyS0,115200 biosdevname=0 net.ifnames=0\"' /etc/default/grub",
+        "grub2-set-default 0",
+        "grub2-mkconfig -o /boot/grub2/grub.cfg",
+        "rm -f /etc/sysconfig/network-scripts/ifcfg-ens*",
+        "systemctl disable kdump.service",
+        "rm -f /etc/ssh/ssh_host_*"
+      ]
+    }
+  ]
+}

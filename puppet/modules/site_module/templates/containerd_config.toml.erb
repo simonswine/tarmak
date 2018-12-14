@@ -1,0 +1,22 @@
+# Kubernetes doesn't use containerd restart manager.
+disabled_plugins = ["restart"]
+
+[debug]
+  level = "info"
+
+[plugins.linux]
+  shim = "<%= @dest_dir %>/bin/containerd-shim"
+  runtime = "<%= @dest_dir %>/bin/runc"
+
+[plugins.cri]
+  stream_server_address = "127.0.0.1"
+  max_container_log_line_size = 102400
+  enable_selinux = true
+[Plugins.cri.cni]
+  conf_template = "<%= @dest_dir %>/cni.template"
+[plugins.cri.registry.mirrors."docker.io"]
+  endpoint = ["https://registry-1.docker.io"]
+[plugins.cri.containerd.untrusted_workload_runtime]
+  runtime_type = ""
+  runtime_engine = ""
+  runtime_root = ""

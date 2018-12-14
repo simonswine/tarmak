@@ -1,0 +1,16 @@
+---
+HOSTS:
+  k8s:
+    roles:
+      - master
+      - k8s-master
+      - k8s-worker
+    platform: ubuntu-16.04-amd64
+    box: nrclark/xenial64-minimal-libvirt
+    box_verison: v1.1.1
+    hypervisor: vagrant_libvirt
+CONFIG:
+  type: foss
+  trace_limit: 1024
+  libvirt:
+    random_hostname: true

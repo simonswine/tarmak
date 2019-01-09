@@ -2535,7 +2535,7 @@
   version = "kubernetes-1.13.1"
 
 [[projects]]
-  digest = "1:e617800ddcdaa1d91774db51f5d2c11896992ed442b11f502d088bb4a1534012"
+  digest = "1:dc1ae99dcab96913d81ae970b1f7a7411a54199b14bfb17a7e86f9a56979c720"
   name = "k8s.io/code-generator"
   packages = [
     "cmd/client-gen",
@@ -2547,17 +2547,23 @@
     "cmd/client-gen/path",
     "cmd/client-gen/types",
     "cmd/conversion-gen",
+    "cmd/conversion-gen/args",
     "cmd/conversion-gen/generators",
     "cmd/deepcopy-gen",
+    "cmd/deepcopy-gen/args",
     "cmd/defaulter-gen",
+    "cmd/defaulter-gen/args",
     "cmd/informer-gen",
+    "cmd/informer-gen/args",
     "cmd/informer-gen/generators",
     "cmd/lister-gen",
+    "cmd/lister-gen/args",
     "cmd/lister-gen/generators",
+    "pkg/util",
   ]
   pruneopts = "T"
-  revision = "91d3f6a57905178524105a085085901bb73bd3dc"
-  version = "kubernetes-1.9.3"
+  revision = "c2090bec4d9b1fb25de3812f868accc2bc9ecbae"
+  version = "kubernetes-1.13.1"
 
 [[projects]]
   digest = "1:eb419924141c38a590476e98cbdfe58d945f06268ac40fc5d2d10f5436b0ff70"

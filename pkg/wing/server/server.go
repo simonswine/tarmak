@@ -15,7 +15,7 @@ import (
 	clientset "github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned"
 	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apiserver/pkg/admission"
+	//"k8s.io/apiserver/pkg/admission"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 )
@@ -68,7 +68,8 @@ func NewCommandStartWingServer(out, errOut io.Writer, stopCh <-chan struct{}) *c
 	}
 
 	flags := cmd.Flags()
-	o.RecommendedOptions.AddFlags(flags)
+	o.RecommendedOptions.Etcd.AddFlags(flags)
+	o.RecommendedOptions.SecureServing.AddFlags(flags)
 
 	return cmd
 }
@@ -95,24 +96,29 @@ func (o *WingServerOptions) Config() (*apiserver.Config, error) {
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
-	o.RecommendedOptions.ExtraAdmissionInitializers = func(c *genericapiserver.RecommendedConfig) ([]admission.PluginInitializer, error) {
-		client, err := clientset.NewForConfig(c.LoopbackClientConfig)
-		if err != nil {
-			return nil, err
-		}
-		informerFactory := informers.NewSharedInformerFactory(client, c.LoopbackClientConfig.Timeout)
-		o.SharedInformerFactory = informerFactory
-		return []admission.PluginInitializer{winginitializer.New(informerFactory)}, nil
+	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
+	if err := o.RecommendedOptions.Etcd.ApplyTo(&serverConfig.Config); err != nil {
+		return nil, err
+	}
+	if err := o.RecommendedOptions.SecureServing.ApplyTo(&serverConfig.SecureServing, &serverConfig.LoopbackClientConfig); err != nil {
+		return nil, err
 	}
 
-	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
-	if err := o.RecommendedOptions.ApplyTo(serverConfig, apiserver.Scheme); err != nil {
+	client, err := clientset.NewForConfig(serverConfig.LoopbackClientConfig)
+	if err != nil {
+		return nil, err
+	}
+	informerFactory := informers.NewSharedInformerFactory(client, serverConfig.LoopbackClientConfig.Timeout)
+	admissionInitializer := winginitializer.New(informerFactory)
+
+	if err := o.RecommendedOptions.Admission.ApplyTo(&serverConfig.Config, informerFactory, serverConfig.LoopbackClientConfig, apiserver.Scheme, admissionInitializer); err != nil {
 		return nil, err
 	}
 
 	config := &apiserver.Config{
 		GenericConfig: serverConfig,
 	}
+
 	return config, nil
 }
 

@@ -26,8 +26,8 @@ import (
 
 	"github.com/jetstack/tarmak/pkg/apis/wing"
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
-	listers "github.com/jetstack/tarmak/pkg/wing/client/listers/wing/internalversion"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
+	listers "github.com/jetstack/tarmak/pkg/wing/client/listers/wing/v1alpha1"
 )
 
 // Register registers a plugin
@@ -85,8 +85,8 @@ func (d *DisallowInstance) Admit(a admission.Attributes) error {
 // SetInternalWingInformerFactory gets Lister from SharedInformerFactory.
 // The lister knows how to lists Instances.
 func (d *DisallowInstance) SetInternalWingInformerFactory(f informers.SharedInformerFactory) {
-	d.lister = f.Wing().InternalVersion().Instances().Lister()
-	d.SetReadyFunc(f.Wing().InternalVersion().Instances().Informer().HasSynced)
+	d.lister = f.Wing().V1alpha1().Instances().Lister()
+	d.SetReadyFunc(f.Wing().V1alpha1().Instances().Informer().HasSynced)
 }
 
 // ValidaValidateInitializationte checks whether the plugin was correctly initialized.

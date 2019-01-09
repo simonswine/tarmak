@@ -23,8 +23,8 @@ import (
 	"k8s.io/apiserver/pkg/admission"
 
 	"github.com/jetstack/tarmak/pkg/wing/admission/winginitializer"
-	"github.com/jetstack/tarmak/pkg/wing/client/clientset/internalversion/fake"
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
+	"github.com/jetstack/tarmak/pkg/wing/client/clientset/versioned/fake"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 )
 
 // TestWantsInternalWingInformerFactory ensures that the informer factory is injected

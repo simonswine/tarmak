@@ -17,7 +17,7 @@ limitations under the License.
 package winginitializer
 
 import (
-	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/internalversion"
+	informers "github.com/jetstack/tarmak/pkg/wing/client/informers/externalversions"
 	"k8s.io/apiserver/pkg/admission"
 )
 

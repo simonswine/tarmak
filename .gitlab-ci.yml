@@ -1,5 +1,9 @@
 # run test on golang code
-#
+
+# Ensure secrets are not exposed unnecessarily
+before_script:
+- unset GPG_PRIVATE_KEY
+
 test::tarmak::golang:
   stage: test
   tags:
@@ -50,10 +54,9 @@ release::tarmak::golang:
   image: golang:1.11.4
   only:
   - tags
+  before_script:
+  - echo "${GPG_PRIVATE_KEY}" | gpg --import -
   script:
-  - umask 0077
-  - mkdir -p /root/.gnupg
-  - echo "${GPG_PRIVATE_KEY}" | base64 -d > /root/.gnupg/secring.gpg
   - rm -rf /go/src/github.com/jetstack
   - mkdir -p /go/src/github.com/jetstack
   - mv ${CI_PROJECT_DIR} /go/src/github.com/jetstack

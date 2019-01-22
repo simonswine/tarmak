@@ -24,8 +24,8 @@ ifeq ($(UNAME_S),Linux)
 	SHASUM := sha256sum -c
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64
 	DEP_HASH := 287b08291e14f1fae8ba44374b26a2b12eb941af3497ed0ca649253e21ba2f83
-	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Linux_x86_64.tar.gz
-	GORELEASER_HASH := aae3c5bb76b282e29940f2654b48b13e51f664368c7589d0e86b391b7ef51cc8
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.98.0/goreleaser_Linux_x86_64.tar.gz
+	GORELEASER_HASH := f7dbad6cc4f8424eceb7a2d74dc21472f4ebde6041abf12ff1b44d766c8ad836
 	NODE_NAME := node-v8.12.0-linux-x64
 	NODE_URL := https://nodejs.org/dist/v8.12.0/${NODE_NAME}.$(TAR_EXT)
 	NODE_HASH := 29a20479cd1e3a03396a4e74a1784ccdd1cf2f96928b56f6ffa4c8dae40c88f2
@@ -35,8 +35,8 @@ ifeq ($(UNAME_S),Darwin)
 	SHASUM := shasum -a 256 -c
 	DEP_URL := https://github.com/golang/dep/releases/download/v0.5.0/dep-darwin-amd64
 	DEP_HASH := 1a7bdb0d6c31ecba8b3fd213a1170adf707657123e89dff234871af9e0498be2
-	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.77.0/goreleaser_Darwin_x86_64.tar.gz
-	GORELEASER_HASH := bc6cdf2dfe506f2cce5abceb30da009bfd5bcdb3e52608c536e6c2ceea1f24fe
+	GORELEASER_URL := https://github.com/goreleaser/goreleaser/releases/download/v0.98.0/goreleaser_Darwin_x86_64.tar.gz
+	GORELEASER_HASH := 6ecedd5a6a3cded423cf1304771839a6b6c981965705b65706e830ed82628828
 	NODE_NAME := node-v8.12.0-darwin-x64
 	NODE_URL := https://nodejs.org/dist/v8.12.0/${NODE_NAME}.$(TAR_EXT)
 	NODE_HASH := ca131b84dfcf2b6f653a6521d31f7a108ad7d83f4d7e781945b2eca8172064aa

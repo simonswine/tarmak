@@ -82,7 +82,18 @@ go_fmt:
 	fi
 
 clean:
-	rm -rf $(BINDIR)
+	rm -rf \
+		$(BINDIR) \
+		cmd/tagging_control/tagging_control_linux_amd64 \
+		cmd/tarmak/tarmak \
+		cmd/tarmak/tarmak_linux_amd64 \
+		cmd/tarmak/tarmak_darwin_amd64 \
+		cmd/wing/wing_linux_amd64 \
+		pkg/tarmak/binaries/binaries_bindata.go \
+		pkg/tarmak/assets/assets_bindata.go \
+		pkg/wing/mocks/http_client.go \
+		pkg/wing/mocks/command.go \
+		pkg/wing/mocks/client.go
 
 go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
@@ -90,21 +101,7 @@ go_vet:
 go_build_tagging_control:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh)' -o tagging_control_linux_amd64 ./cmd/tagging_control
 
-go_build:
-	# Build a wing binary
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh)' -o wing_linux_amd64 ./cmd/wing
-ifeq ($(CI_COMMIT_TAG),dev)
-	# Building in Dev mode
-	# Build a hashable version of the wing binary without build variables
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -o wing_linux_amd64_unversioned ./cmd/wing
-	# The hash of this binary is used to test if wing has changed in the s3 object key name
-	$(eval WING_HASH := $(shell md5sum wing_linux_amd64_unversioned | awk '{print $$1}'))
-	# Include binaries into devmode build of tarmak
-	go generate -tags devmode $$(go list ./pkg/... ./cmd/...)
-endif
-	# Make sure you add all binaries to the .goreleaser.yml as well
-	CGO_ENABLED=0 GOOS=linux  GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH)' -o tarmak_linux_amd64 ./cmd/tarmak
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh) -X github.com/jetstack/tarmak/pkg/terraform.wingHash=$(WING_HASH) -X main.wingHash=$(WING_HASH)' -o tarmak_darwin_amd64 ./cmd/tarmak
+go_build: cmd/tarmak/tarmak
 
 $(BINDIR)/mockgen:
 	mkdir -p $(BINDIR)
@@ -181,8 +178,7 @@ $(BINDIR)/gen-apidocs:
 	go build -o $@ ./vendor/github.com/kubernetes-incubator/reference-docs/gen-apidocs
 
 
-go_generate: depend
-	go generate $$(go list ./pkg/... ./cmd/...)
+go_generate: pkg/wing/mocks/http_client.go pkg/wing/mocks/command.go pkg/wing/mocks/client.go pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go
 
 go_codegen: depend $(TYPES_FILES)
 	$(HACK_DIR)/update-codegen.sh
@@ -234,6 +230,30 @@ endif
 	git tag $(VERSION)
 
 
+cmd/wing/wing_linux_amd64: $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/wing
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/wing
+
+cmd/tagging_control/tagging_control_linux_amd64: $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tagging_control | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/tagging_control
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tagging_control
+
+cmd/tarmak/tarmak: pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/tarmak
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
+
+pkg/tarmak/binaries/binaries_bindata.go: cmd/wing/wing_linux_amd64 cmd/tagging_control/tagging_control_linux_amd64 pkg/tarmak/binaries/binaries.go $(BINDIR)/go-bindata
+	go generate ./pkg/tarmak/binaries
+
+pkg/tarmak/assets/assets_bindata.go: $(shell find packer/ puppet/ terraform/ -type f) pkg/tarmak/assets/assets.go $(BINDIR)/go-bindata
+	go generate ./pkg/tarmak/assets
+
+pkg/wing/mocks/http_client.go: vendor/k8s.io/client-go/rest/request.go $(BINDIR)/mockgen
+	mockgen -package=mocks -source=vendor/k8s.io/client-go/rest/request.go -destination $@
+
+pkg/wing/mocks/command.go: pkg/wing/command.go $(BINDIR)/mockgen
+	mockgen -package=mocks -source=pkg/wing/command.go -destination $@
+
+pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}' k8s.io/client-go/rest) $(BINDIR)/mockgen
+	mockgen -destination $@ -package=mocks k8s.io/client-go/rest Interface
+
 docker_%:
 	# create a container
 	$(eval CONTAINER_ID := $(shell docker create \
@@ -256,6 +276,3 @@ docker_%:
 
 	# remove container
 	docker rm $(CONTAINER_ID)
-
-local_build: go_generate
-	go build -o tarmak_local_build ./cmd/tarmak

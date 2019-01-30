@@ -12,6 +12,14 @@ CI_COMMIT_SHA ?= unknown
 # A list of all types.go files in pkg/apis
 TYPES_FILES = $(shell find pkg/apis -name types.go)
 
+# List of dependent gofiles
+TARMAK_GO_FILES := pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tarmak | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
+WING_GO_FILES := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
+TAGGING_CONTROL_GO_FILES := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tagging_control | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}')
+
+
+
+
 HACK_DIR     ?= hack
 
 GOPATH ?= /tmp/go
@@ -97,9 +105,6 @@ clean:
 
 go_vet:
 	go vet $$(go list ./pkg/... ./cmd/...| grep -v pkg/wing/client/clientset/internalversion/fake | grep -v pkg/wing/client/clientset/versioned/fake)
-
-go_build_tagging_control:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -ldflags '-w $(shell hack/version-ldflags.sh)' -o tagging_control_linux_amd64 ./cmd/tagging_control
 
 go_build: cmd/tarmak/tarmak
 
@@ -213,7 +218,7 @@ subtrees:
 		git subtree pull --prefix puppet/modules/$$module git://github.com/jetstack/puppet-module-$$module.git master; \
 	done
 
-release:
+prepare_release:
 ifndef VERSION
 	$(error VERSION is undefined)
 endif
@@ -230,14 +235,20 @@ endif
 	git tag $(VERSION)
 
 
-cmd/wing/wing_linux_amd64: $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/wing
+cmd/wing/wing_linux_amd64: $(WING_GO_FILES)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/wing
 
-cmd/tagging_control/tagging_control_linux_amd64: $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/tagging_control | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/tagging_control
+cmd/tagging_control/tagging_control_linux_amd64: $(TAGGING_CONTROL_GO_FILES)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tagging_control
 
-cmd/tarmak/tarmak: pkg/tarmak/binaries/binaries_bindata.go pkg/tarmak/assets/assets_bindata.go $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/wing | xargs go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}') ./cmd/tarmak
+cmd/tarmak/tarmak: $(TARMAK_GO_FILES)
+	CGO_ENABLED=0 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
+
+cmd/tarmak/tarmak_linux_amd64: $(TARMAK_GO_FILES)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
+
+cmd/tarmak/tarmak_darwin_amd64: $(TARMAK_GO_FILES)
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags netgo -o $@ -ldflags '-w $(shell hack/version-ldflags.sh)' ./cmd/tarmak
 
 pkg/tarmak/binaries/binaries_bindata.go: cmd/wing/wing_linux_amd64 cmd/tagging_control/tagging_control_linux_amd64 pkg/tarmak/binaries/binaries.go $(BINDIR)/go-bindata
 	go generate ./pkg/tarmak/binaries
@@ -253,6 +264,17 @@ pkg/wing/mocks/command.go: pkg/wing/command.go $(BINDIR)/mockgen
 
 pkg/wing/mocks/client.go: $(shell go list -f '{{ $$global := .}}{{ range .GoFiles }}{{ printf "%s/%s\n" $$global.Dir . }}{{ end}}' k8s.io/client-go/rest) $(BINDIR)/mockgen
 	mockgen -destination $@ -package=mocks k8s.io/client-go/rest Interface
+
+
+## Release instructions
+.PHONY: release
+release: _release/cmd/tarmak/tarmak_linux_amd64 _release/cmd/wing/wing_linux_amd64 _release/cmd/tagging_control/tagging_control_linux_amd64 ## Build release binaries
+
+_release/%: % $(BINDIR)/upx
+	mkdir -p "_release/$$(dirname $*)"
+	rm -f $@
+	$(BINDIR)/upx -o$@ $*
+	touch $@
 
 docker_%:
 	# create a container

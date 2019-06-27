@@ -52,6 +52,55 @@ spec:
         operator: Exists
 <%- end -%>
       hostNetwork: true
+      initContainers:
+        - name: install-cni
+          image: <%= @cni_image %>:v<%= @cni_version %>
+          command: ["/install-cni.sh"]
+          env:
+            # Name of the CNI config file to create.
+            - name: CNI_CONF_NAME
+              value: "10-calico.conflist"
+            # The CNI network config to install on each node.
+            - name: CNI_NETWORK_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: cni_network_config
+            # CNI MTU Config variable
+            - name: CNI_MTU
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: veth_mtu
+            # Prevents the container from sleeping forever.
+            - name: SLEEP
+              value: "false"
+<% if @backend == 'etcd' -%>
+            # The location of the Calico etcd cluster.
+            - name: ETCD_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: etcd_endpoints
+<% else -%>
+            # Set the hostname based on the k8s node name.
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+<% end -%>
+          # This is required for SELinux, otherwise no access to the host directories allowed
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /host/opt/cni/bin
+              name: cni-bin-dir
+            - mountPath: /host/etc/cni/net.d
+              name: cni-net-dir
+<% if @backend == 'etcd' and @etcd_proto == 'https' -%>
+            - mountPath: <%= @etcd_cert_path%>
+              name: etcd-certs
+<% end -%>
       containers:
         # Runs calico/node container on each Kubernetes node.  This
         # container programs network policy and routes on each
@@ -151,10 +200,13 @@ spec:
               value: "<%= @ipv4_pool_ipip_mode %>"
             # Auto-detect the BGP IP address.
             - name: IP
-              value: ""
-            # Setup a custom MTU value
+              value: "autodetect"
+            # Set MTU for tunnel device used if ipip is enabled
             - name: FELIX_IPINIPMTU
-              value: "<%= @mtu %>"
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: veth_mtu
             - name: FELIX_HEALTHENABLED
               value: "true"
           securityContext:
@@ -170,14 +222,18 @@ spec:
             initialDelaySeconds: 10
             failureThreshold: 6
           readinessProbe:
-            httpGet:
-              path: /readiness
-              port: 9099
-            periodSeconds: 10
+            exec:
+              command:
+              - /bin/calico-node
+              - -bird-ready
+              - -felix-ready
           volumeMounts:
             - mountPath: /lib/modules
               name: lib-modules
               readOnly: true
+            - mountPath: /run/xtables.lock
+              name: xtables-lock
+              readOnly: false
             - mountPath: /var/run/calico
               name: var-run-calico
               readOnly: false
@@ -190,45 +246,6 @@ spec:
 <% end -%>
         # This container installs the Calico CNI binaries
         # and CNI network config file on each node.
-        - name: install-cni
-          image: <%= @cni_image %>:v<%= @cni_version %>
-          command: ["/install-cni.sh"]
-          env:
-            # Name of the CNI config file to create.
-            - name: CNI_CONF_NAME
-              value: "10-calico.conflist"
-            # The CNI network config to install on each node.
-            - name: CNI_NETWORK_CONFIG
-              valueFrom:
-                configMapKeyRef:
-                  name: calico-config
-                  key: cni_network_config
-<% if @backend == 'etcd' -%>
-            # The location of the Calico etcd cluster.
-            - name: ETCD_ENDPOINTS
-              valueFrom:
-                configMapKeyRef:
-                  name: calico-config
-                  key: etcd_endpoints
-<% else -%>
-            # Set the hostname based on the k8s node name.
-            - name: KUBERNETES_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-<% end -%>
-          # This is required for SELinux, otherwise no access to the host directories allowed
-          securityContext:
-            privileged: true
-          volumeMounts:
-            - mountPath: /host/opt/cni/bin
-              name: cni-bin-dir
-            - mountPath: /host/etc/cni/net.d
-              name: cni-net-dir
-<% if @backend == 'etcd' and @etcd_proto == 'https' -%>
-            - mountPath: <%= @etcd_cert_path%>
-              name: etcd-certs
-<% end -%>
       volumes:
         # Used by calico/node.
         - name: lib-modules
@@ -240,6 +257,10 @@ spec:
         - name: var-lib-calico
           hostPath:
             path: /var/lib/calico
+        - name: xtables-lock
+          hostPath:
+            path: /run/xtables.lock
+            type: FileOrCreate
         # Used to install CNI.
         - name: cni-bin-dir
           hostPath:

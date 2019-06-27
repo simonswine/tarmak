@@ -48,6 +48,11 @@ spec:
       containers:
         - name: calico-policy-controller
           image: <%= @image %>:v<%= @version %>
+          readinessProbe:
+            exec:
+              command:
+              - /usr/bin/check-status
+              - -r
           env:
 <% if @backend == 'etcd' -%>
             # The location of the Calico etcd cluster.
@@ -58,7 +63,7 @@ spec:
                   key: etcd_endpoints
             # Choose which controllers to run.
             - name: ENABLED_CONTROLLERS
-              value: policy,profile,workloadendpoint,node
+              value: policy,namespace,serviceaccount,workloadendpoint,node
 <% if @tls -%>
             # Location of the CA certificate for etcd.
             - name: ETCD_CA_CERT_FILE

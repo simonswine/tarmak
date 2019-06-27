@@ -10,8 +10,13 @@ data:
   # Configure this with the location of your etcd cluster.
   etcd_endpoints: "<%= @etcd_endpoints %>"
 
+  # Typha is disabled.
+  typha_service_name: "none"
   # Configure the Calico backend to use.
   calico_backend: "bird"
+
+  # Configure the MTU to use
+  veth_mtu: "<%=@mtu %>"
 
   # The CNI network configuration to install on each node.
   cni_network_config: |-
@@ -26,7 +31,7 @@ data:
           "etcd_cert_file": "<%= @etcd_cert_file %>",
           "etcd_ca_cert_file": "<%= @etcd_ca_file %>",
           "log_level": "info",
-          "mtu": <%= @mtu %>,
+          "mtu": __CNI_MTU__,
           "ipam": {
               "type": "calico-ipam"
           },
